@@ -60,7 +60,7 @@ int
 LookupCmd(char * cmd) {
   struct SymEntry * entry = LookupName(cmdTable,cmd);
   if (!entry) return UNKNOWN_CMD;
-  return (int) GetAttr(entry);
+  return (long) GetAttr(entry);
 }
 
 // =======================
@@ -135,7 +135,7 @@ SanityTest() {
   }
   for (int i = 0; i < sizeof(testNames)/sizeof(char *); i++) {
     struct SymEntry * entry = LookupName(table,testNames[i]);
-    int v = (int)GetAttr(entry);
+    long v = (long)GetAttr(entry);
     ConditionalErrorExit(v != i, "Attribute not correct for entered name\n");
   }
   fprintf(stderr,"Sanity Checks Complete\n");
