@@ -1,0 +1,57 @@
+
+Definition next token is longest sequence which is a token
+
+Recognition problem:
+Given sequence determine kind of token
+
+Grouping problem:
+The character group which forms next token.
+
+Describe sequence which are of given token type.
+
+Regular Expressions
+    - algebraic notation to represent set of sequences
+Definition: use induction to define regular expression (R.E.)
+    have:
+        l is a R.E. for l in SIGMA
+        NIL is a R.E.
+        LAMBDA is a R.E.
+    inductive step:
+        if alpha and beta are R.E.
+        then so are (alpha union beta), (a ^ b), (a)*
+
+        Definition: For a R.E the val(a) is the set of sequences
+        represented by a and is defined by induction on a
+
+        base:   val(l) = { "l" }
+                val(NIL) = NIL
+                val(LAMBDA) = {""} = {LAMBDA}
+
+        inductive:  Given val(a) and val(b)
+            val(a UNION b) = val(a) U val(b)
+            val(a^b) = {w | w = uv where u in val(a) and v in val(b)}
+            val(a*) = {LAM} U val(a) U val(a^a) U val(a^a^a)...
+
+Are R.E sufficient enough to decide sets of token seq's.
+ex.     identifiers: (Aa...zZ)^ { Aa...Az0...9}*
+decimal integers:    [1...9^(0...9)*] U 0
+        float:       [1...9^(0...9)*]^.^(0...9)*
+reserved words:      b^e^g^i^n
+operators:           -U+
+
+
+Lexical Analysis
+R.E. EQUIVALENCE F.S.A.
+
+Set of States, Alphabet, Initial State, Final States,Transition Funct
+
+An FSA has a set of sequences that it accepts.
+
+
+Given FSA A we define
+run(s, w) = state reached starting at s and following w.
+{
+    run(s, LAM) = run(s)
+    run(s, u^l)
+
+}
