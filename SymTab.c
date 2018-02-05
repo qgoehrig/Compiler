@@ -56,7 +56,7 @@ HashName(int size, const char *name) {
 struct SymEntry *
 FindNameInList(struct SymEntry *anEntry, const char *name) {
     struct SymEntry * entryIndex = anEntry;
-    printf("searching for %s at mem %p\n", name, entryIndex);
+    printf("searching for %s at mem %p\n" , name, entryIndex);
     // Check to see if a name exists at this location
     while( entryIndex ) {
         //printf("searching at index %p\n", entryIndex);
@@ -72,9 +72,7 @@ FindNameInList(struct SymEntry *anEntry, const char *name) {
 
 struct SymEntry *
 LookupName(struct SymTab *aTable, const char * name) {
-
-    printf("searching for name %s\n", name);
-
+    printf("LOOKUP -  %s\n", name);
     if( !aTable ) {
         printf("could not find name %s\n", name);
         return NULL;
@@ -87,22 +85,28 @@ LookupName(struct SymTab *aTable, const char * name) {
     struct SymEntry * search = FindNameInList(entry, name);
     // Recursively check parent table if no result found
     return search ? search : LookupName(aTable->parent, name);
-
 }
 
 struct SymEntry *
 AddNameToList(struct SymTab *aTable, const char *name, int hashVal) {
-    //Create a new SymEntry if none exists in original content
-    struct SymEntry * entryIndex = *(aTable->contents + hashVal);
-    while(entryIndex) {
-        entryIndex = entryIndex->next;
-    }
-    entryIndex = malloc(sizeof(struct SymEntry));
+
+    struct SymEntry * entryIndex = malloc(sizeof(struct SymEntry));
     entryIndex->name = strdup(name);
     entryIndex->table = aTable;
     entryIndex->next = NULL;
-    *(aTable->contents + hashVal) = entryIndex;
-    printf("added entry with name %s at content[ %d ]\n", name, hashVal);
+
+    struct SymEntry * entryPoint = *(aTable->contents + hashVal);
+    if( !entryPoint ) {
+        *(aTable->contents + hashVal) = entryIndex;
+    }
+    else {
+        while( entryPoint->next ) {
+            entryPoint = entryPoint->next;
+        }
+        entryPoint->next = entryIndex;
+    }
+
+    printf("added entry with name %s at mem %p with hash %d\n", name, entryIndex, hashVal);
     return entryIndex;
 }
 
@@ -110,7 +114,6 @@ struct SymEntry *
 EnterName(struct SymTab *aTable, const char *name) {
     int hashVal = HashName(aTable->size, name);
     struct SymEntry * myEntry = *(aTable->contents + hashVal);
-    //printf("entering at %p\n", myEntry);
     // Lookup name, if no entry with name found in SymEntry list, add one.
     struct SymEntry * lookup = FindNameInList(myEntry, name);
     return lookup ? lookup : AddNameToList(aTable, name, hashVal);
@@ -128,7 +131,7 @@ GetAttrKind(struct SymEntry *anEntry) {
 
 void *
 GetAttr(struct SymEntry *anEntry) {
-    return NULL;
+    return anEntry->attributes;
 }
 
 const char *
