@@ -32,31 +32,33 @@ CreateSymTab(int size, char * scopeName, struct SymTab * parentTable) {
     tab->size = size;
     tab->contents = calloc(size, sizeof(struct SymEntry *));
     tab->parent = parentTable ? parentTable : NULL;
-    printf("SymTab ( %s ) Initialized\n", scopeName);
+    //printf("SymTab ( %s ) Initialized\n", scopeName);
     return tab;
 }
 
 void
 EntryFree(struct SymEntry * entry, int cnt, void * withArgs) {
-    struct SymEntry * index = entry;
-    while( index ) {
-        free(index->attributes);
-        free(index->name);
-        index = index->next;
-    }
+    //struct SymEntry * index = entry;
+    //while( index ) {
+        //free(entry->attributes);
+        free(entry->name);
+        free(entry);
+        //index = index->next;
+    //}
 }
 
 
 void
 InvokeOnEntries(struct SymTab *aTable, bool includeParentTable,
              entryWorkFunc workFunc, int startCnt, void * withArgs) {
+                 int cnt = startCnt;
                  int size = aTable->size;
-                 for(int i = 0; i < size; i++) {
+                 for(int i = cnt; i < size; i++) {
                      if(aTable->contents[i]) {
                          struct SymEntry * entryIndex = aTable->contents[i];
                          while( entryIndex ) {
                              workFunc(entryIndex, startCnt, withArgs);
-                             startCnt++;
+                             //cnt++;
                              entryIndex = entryIndex->next;
                          }
                      }
@@ -71,8 +73,11 @@ struct SymTab *
 DestroySymTab(struct SymTab *aTable) {
     struct SymTab * parent = aTable->parent;
     InvokeOnEntries(aTable, false, EntryFree, 0, NULL);
-    free(aTable->scopeName);
-    free(aTable->contents);
+    //free(aTable->scopeName);
+    //free(aTable->contents);
+    free(aTable);
+    //free(aTable->scopeName);
+    //free(aTable->contents);
     //free(aTable->parent);
     //free(aTable);
     return parent;
@@ -86,7 +91,7 @@ HashName(int size, const char *name) {
         chrSum += (int) name[i];
         i++;
     }
-    return chrSum % (size - 1);
+    return chrSum % size;
 }
 
 //Given a list of SymEntries, finds the one matching a name, or null
@@ -98,20 +103,20 @@ FindNameInList(struct SymEntry *anEntry, const char *name) {
     while( entryIndex ) {
         //printf("searching at index %p\n", entryIndex);
         if( strcmp(entryIndex->name, name) == 0 ) {
-            printf("found name %s\n", name);
+            //printf("found name %s\n", name);
             return entryIndex;
         }
         entryIndex = entryIndex->next;
     }
-    printf("could not find name %s\n", name);
+    //printf("could not find name %s\n", name);
     return NULL;
 }
 
 struct SymEntry *
 LookupName(struct SymTab *aTable, const char * name) {
-    printf("LOOKUP %s\n", name);
+    //printf("LOOKUP %s\n", name);
     if( !aTable ) {
-        printf("could not find name %s\n", name);
+        //printf("could not find name %s\n", name);
         return NULL;
     }
     //Check current table
@@ -125,7 +130,7 @@ LookupName(struct SymTab *aTable, const char * name) {
 
 struct SymEntry *
 AddNameToList(struct SymTab *aTable, const char *name, int hashVal) {
-    struct SymEntry * entryIndex = malloc(sizeof(struct SymEntry));
+    struct SymEntry * entryIndex = calloc(1, sizeof(struct SymEntry));
     entryIndex->name = (name) ? strdup(name) : NULL;
     entryIndex->table = aTable;
     entryIndex->next = NULL;
@@ -147,7 +152,7 @@ AddNameToList(struct SymTab *aTable, const char *name, int hashVal) {
 
 struct SymEntry *
 EnterName(struct SymTab *aTable, const char *name) {
-    printf("ENTER name %s\n", name);
+    //printf("ENTER name %s\n", name);
     int hashVal = HashName(aTable->size, name);
     struct SymEntry * myEntry = aTable->contents[hashVal];
     // Lookup name, if no entry with name found in SymEntry list, add one.
@@ -163,7 +168,7 @@ SetAttr(struct SymEntry *anEntry, int kind, void *attributes) {
 
 int
 GetAttrKind(struct SymEntry *anEntry) {
-    return anEntry ? anEntry->attrKind : 0;
+    return anEntry ? anEntry->attrKind : -999;
 }
 
 void *
@@ -188,12 +193,19 @@ GetScopeName(struct SymTab *aTable) {
 
 char *
 GenScopePath(struct SymTab * cTab, char * str) {
-    char * cName = strdup(cTab->scopeName);
+    //char * cName = strdup(cTab->scopeName);
+    int cNameLen = strlen(cTab->scopeName);
     char * retStr;
     if(!str) {
-        retStr = strcat(cName, ">");
+        retStr = malloc(cNameLen + 1); //nullchar and '>'
+        strcpy(retStr, cTab->scopeName);
     } else {
-        retStr = strcat(cName, str);
+        int existingLen = strlen(str);
+        retStr = malloc(cNameLen + existingLen + 2);
+        strcpy(retStr, cTab->scopeName);
+        strcat(retStr, ">");
+        strcat(retStr, str);
+
     }
 
     if(cTab->parent) {
