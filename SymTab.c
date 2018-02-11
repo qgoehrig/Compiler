@@ -51,14 +51,17 @@ EntryFree(struct SymEntry * entry, int cnt, void * withArgs) {
 void
 InvokeOnEntries(struct SymTab *aTable, bool includeParentTable,
              entryWorkFunc workFunc, int startCnt, void * withArgs) {
-                 int cnt = startCnt;
                  int size = aTable->size;
-                 for(int i = cnt; i < size; i++) {
+                 for(int i = 0; i < size; i++) {
+                     int cnt = startCnt;
                      if(aTable->contents[i]) {
                          struct SymEntry * entryIndex = aTable->contents[i];
                          while( entryIndex ) {
+
                              workFunc(entryIndex, startCnt, withArgs);
-                             //cnt++;
+                             startCnt++;
+
+                             //startCnt
                              entryIndex = entryIndex->next;
                          }
                      }
@@ -73,8 +76,8 @@ struct SymTab *
 DestroySymTab(struct SymTab *aTable) {
     struct SymTab * parent = aTable->parent;
     InvokeOnEntries(aTable, false, EntryFree, 0, NULL);
-    //free(aTable->scopeName);
-    //free(aTable->contents);
+    free(aTable->scopeName);
+    free(aTable->contents);
     free(aTable);
     //free(aTable->scopeName);
     //free(aTable->contents);
@@ -91,6 +94,7 @@ HashName(int size, const char *name) {
         chrSum += (int) name[i];
         i++;
     }
+    //printf("NAME: %s, HASH: %d, SIZE %d\n", name, (chrSum % size), size);
     return chrSum % size;
 }
 
@@ -136,15 +140,17 @@ AddNameToList(struct SymTab *aTable, const char *name, int hashVal) {
     entryIndex->next = NULL;
     entryIndex->attributes = NULL;
 
-    struct SymEntry * entryPoint = aTable->contents[hashVal];
-    if( !entryPoint ) {
+    struct SymEntry * head = aTable->contents[hashVal];
+    if( !head ) {
         aTable->contents[hashVal] = entryIndex;
     }
     else {
-        while( entryPoint->next ) {
-            entryPoint = entryPoint->next;
-        }
-        entryPoint->next = entryIndex;
+        entryIndex->next = head;
+        aTable->contents[hashVal] = entryIndex;
+        // while( entryPoint->next ) {
+        //     entryPoint = entryPoint->next;
+        // }
+        // entryPoint->next = entryIndex;
     }
     //printf("added entry with name %s at mem %p with hash %d\n", name, entryIndex, hashVal);
     return entryIndex;
@@ -205,7 +211,6 @@ GenScopePath(struct SymTab * cTab, char * str) {
         strcpy(retStr, cTab->scopeName);
         strcat(retStr, ">");
         strcat(retStr, str);
-
     }
 
     if(cTab->parent) {
