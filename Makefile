@@ -48,6 +48,51 @@ symtest-1: SymTabDriver
 		fi
 		rm out
 
+#===========================
+# IOMngr Project
+IOMngr.o: IOMngr.c IOMngr.h
+IOMngrDriver.o: IOMngrDriver.c IOMngr.h
+IOMngrDriver: IOMngrDriver.o IOMngr.o
+
+iotest:	IOMngrDriver
+		make -s iotest-0
+		make -s iotest-1
+		make -s iotest-2
+
+iotest-0: IOMngrDriver
+		echo "Test 0"
+		./IOMngrDriver IOMngrSource > out
+		cat out
+		if diff out IOMngrSource-0.out; then \
+			echo -e "\n\nSUCCESS\n\n" ;\
+		else \
+			echo -e "\n\nFAILED\n\n" ;\
+		fi
+		rm out
+
+iotest-1: IOMngrDriver
+		echo "Test 1"
+		./IOMngrDriver -m IOMngrSource > out
+		cat out
+		if diff out IOMngrSource-1.out; then \
+			echo -e "\n\nSUCCESS\n\n" ;\
+		else \
+			echo -e "\n\nFAILED\n\n" ;\
+		fi
+		rm out
+
+iotest-2: IOMngrDriver
+		echo "Test 2"
+		./IOMngrDriver -u IOMngrSource > out
+		cat out
+		if diff out IOMngrSource-2.out; then \
+			echo -e "\n\nSUCCESS\n\n" ;\
+		else \
+			echo -e "\n\nFAILED\n\n" ;\
+		fi
+		rm out
+
+
 
 # Other
 clean:

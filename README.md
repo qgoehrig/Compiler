@@ -1,56 +1,75 @@
 # CS 442 - Compiler Construction
-## SymTab Assignment Respository
+## IOMngr Repository
 
-This repository initially contains the SymTab Project files: 
+This repository contains files to be added to your main project repository to include the IOMngr module. The IOMngr is responsible for
 
-- SymTabDriver.c 
-    - The main test driver for the assignment. This driver reads lines from an input file. Each line contains one of the following commands.
-        - createtable table_size table_name
-        - insert name value
-        - transfertable existing_table_name new_table_size new_table_name
-        - displaytable table_name
-        - destroytable table_name
-    		
-- SymTab.h 
-    - The include file defining the required structures and functions for the implementation. 
-- SymData-N.in 
-    - Files of test data using of the above commands. 
-- SymData-N.out
-    - Expected output for the sample input.
-- Makefile 
-    - The Makefile containing the dependency rules as well as "clean", "symtest" targets.
+* returning source characters to the caller one at a time
+* associating messages (e.g. compiler errors or warnings) with source lines
+* writing processed source lines to stdout along with associated messages
+
+The repository contains
+
+- IOMngrDriver.c
+    - This is the test driver for the assignment. This driver opens the source and listing files and repeatedly requests the next character from the source file. When specific patterns of characters are seen it posts appropriate messages.  
+
+- IOMngr.h
+    - The include file defining the functions implemented by the IOMngr. 
+
+- IOMngr.c
+	- A stub for the implementation file. 
+	
+- IOMngrSource
+    - A source file for testing.
+
+- IOMngrSource-#.out
+    - The output from testing. 
+
+- Makefile
+    - An extended Makefile containing the rules required for building and testing the project. 
 
 ## The Assignment
 
-Starting with the supplied SymTab.c file, implement the functions defined in SymTab.h. The implementation will use a hash table structure containing singly linked lists of names, with equal hash values, along with their attribute structures. 
+Complete the IOMngr.c file by implementing the functions defined in SymTab.h. Once the source file is opened, GetSourceChar() will return the next available character or EOF if the end of file has been encountered. GetSourceChar() is also responsible for echoing source lines to stdout. Depending on the mode of operation either all lines or only lines with associated messages are echoed to stdout. 
 
-![SymTab Diagram](SymTab.png)
+When written to stdout the source line
 
-Since ``struct SymTab`` includes a parent pointer it is possible to create a chain of tables to support nested scopes. 
+```
+longvar = 4713 - 22;
+```
 
-Creating a table involves allocating space for the ``struct SymTab`` and then space for the ``contents`` array of pointers to the head nodes of the linked lists. There is no need for sentinel nodes. Each index in the contents array is either NULL indicating no list for the hash value or a pointer to a node on the list. New nodes are most easily added to the beginning of the list.
+will appear as
 
-Names entered in a table can have associated attribute data. The Symbol Table knows nothing about the structure of associated attribute data. Consequently, it does not know how to free this data. The ``DestroySymTab`` function only frees the memory allocated by this module. The user must ensure that all user allocated memory forming the associated attribute data is separately freed.  
+![LineListing](LineListing.png)
 
-The InvokeOnEntries() function provides a mechanism for iterating through all entries in a table, and optionally its parent tables as well, applying a supplied work function to each entry. This can be used to free allocated attribute memory. It can also be used for other purposes such as displaying all of the entries in a table.
+The source line is preceeded by a line number (use a max of 5 digits). Messages are associated to columns in the source with marker tags. Highlighting of marker tags and underlining of source text is accomplished using ANSI Terminal Escape Codes. The necessary escape codes, which can be included in the printf format string, are 
 
-The ``attrKind`` fields allows the user to distinguish between several possible kinds of attribute data if necessary. It's interpretation is determined the user.  
+* ``\033[7m`` - turn on reverse highlighting
+* ``\033[4m`` - turn on underlining
+* ``\033[0m`` - reset all attributes
 
-The SymTabDriver.c operates in two modes. When invoked as "./SymTabDriver" it runs a "sanity" check to verify that the implementation is able to create a table and enter/find names. When invoked as "./SymTabDriver aDataFile" the commands contained in aDataFile are executed with output being written to stdout. 
+Because of the required behavior for marking message locations in the source line and displaying messages immediately below source lines it is necessary for the implementation to read source lines in their entirety, buffer them internally, and return single characters from the buffer as requested. Prior to reading a new buffer line the current line must be written to stdout along with any associated messages. Depending on the lineEchoMode set when OpenSource() is called either all lines are written to stdout or only lines with associated messages. 
 
-The project can be tested with ``make symtest`` which will invoke the driver in both forms. 
+The IOMngrDriver implements a table based state machine to recognize a few simple token types. Some of these token types generate messages. The driver tests that GetSourceChar() will continue to return EOF after the end of file is encountered by requiring that EOF be returned 3 times before exiting. If PostMessage() is done for the EOF token the message lines will all appear to use marker "A" since there really is no line corresponding to the EOF.
 
-You may want to use several functions from string.h such as strlen(), strdup(), strcmp(). 
+The driver supports two command line options. 
 
-## What To Do
+* ``-m`` - sets lineEchoMode to true
+* ``-u`` - close and exit on unknown token
 
-- In GitLab, fork this project to make a copy under your GitLab account, it will still be called "Project"
-- Clone _your_ copy of the project to your development machine. 
-- Implement SymTab.c and test. 
+The first controls whether all lines are echoed to output or only lines with messages. The second is used to test output is handled correctly when processing is aborted before the end of the input file. 
+
+The project can be tested with ``make iotest`` which will invoke 3 different tests (e.g. all lines listed, only message lines listed, exit on unknown token).
+
+## What to Do
+
+- DO NOT FORK this repository on Gitlab, instead
+- On your development machine, in a location different than your assignment repository, clone this project. Your original Project repository will continue to accumulate all files for the project. 
+- Copy the files from this repository to your Project repository. The new Makefile will replace the existing copy.
+- Discard the clone of this repository.
+- Complete the IOMngr.c file by implementing the required functionality.
 - When complete, 
-    - ``make clean`` to remove object files and executables
-    - ``git add .`` to add your changes
-    - ``git commit -m "commit message"``
-    - ``git push -u origin master``
-    - add me as a "reporter" member of your project repository
+    - "make clean" to remove object files and executables
+    - use git to add and commit your changes to your local repository
+    - use git to push the project back up to your GitLab account
+    - I should already be a member of your project repository
     - create an issue on your project repository, listing me as assignee, with a title of "Submit for grading"
