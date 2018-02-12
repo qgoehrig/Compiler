@@ -1,3 +1,10 @@
+/* Author:      Quentin Goehrig
+   Created:     02/01.18
+   Resources:   https://www.tutorialspoint.com/c_standard_library/c_standard_library_quick_guide.htm
+                https://www.geeksforgeeks.org/memset-c-example/
+                https://www.tutorialspoint.com/c_standard_library/string_h.htm
+*/
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -22,7 +29,7 @@ struct SymTab {
   struct SymTab * parent;
   char *scopeName;
   int size;
-  struct SymEntry **contents; //List of SymEntries
+  struct SymEntry **contents;
 };
 
 struct SymTab *
@@ -32,19 +39,13 @@ CreateSymTab(int size, char * scopeName, struct SymTab * parentTable) {
     tab->size = size;
     tab->contents = calloc(size, sizeof(struct SymEntry *));
     tab->parent = parentTable ? parentTable : NULL;
-    //printf("SymTab ( %s ) Initialized\n", scopeName);
     return tab;
 }
 
 void
 EntryFree(struct SymEntry * entry, int cnt, void * withArgs) {
-    //struct SymEntry * index = entry;
-    //while( index ) {
-        //free(entry->attributes);
-        free(entry->name);
-        free(entry);
-        //index = index->next;
-    //}
+      free(entry->name);
+      free(entry);
 }
 
 
@@ -57,12 +58,12 @@ InvokeOnEntries(struct SymTab *aTable, bool includeParentTable,
                      if(aTable->contents[i]) {
                          struct SymEntry * entryIndex = aTable->contents[i];
                          while( entryIndex ) {
-
+                             struct SymEntry * nextEntry = entryIndex->next;
                              workFunc(entryIndex, startCnt, withArgs);
                              startCnt++;
 
                              //startCnt
-                             entryIndex = entryIndex->next;
+                             entryIndex = nextEntry;
                          }
                      }
                  }
@@ -79,10 +80,6 @@ DestroySymTab(struct SymTab *aTable) {
     free(aTable->scopeName);
     free(aTable->contents);
     free(aTable);
-    //free(aTable->scopeName);
-    //free(aTable->contents);
-    //free(aTable->parent);
-    //free(aTable);
     return parent;
 }
 
@@ -94,39 +91,35 @@ HashName(int size, const char *name) {
         chrSum += (int) name[i];
         i++;
     }
-    //printf("NAME: %s, HASH: %d, SIZE %d\n", name, (chrSum % size), size);
     return chrSum % size;
 }
 
 //Given a list of SymEntries, finds the one matching a name, or null
 struct SymEntry *
 FindNameInList(struct SymEntry *anEntry, const char *name) {
+
     struct SymEntry * entryIndex = anEntry;
-    //printf("searching for %s at mem %p\n" , name, entryIndex);
     // Check to see if a name exists at this location
     while( entryIndex ) {
-        //printf("searching at index %p\n", entryIndex);
         if( strcmp(entryIndex->name, name) == 0 ) {
-            //printf("found name %s\n", name);
             return entryIndex;
         }
         entryIndex = entryIndex->next;
     }
-    //printf("could not find name %s\n", name);
+    //Return NULL if entry was not found
     return NULL;
 }
 
 struct SymEntry *
 LookupName(struct SymTab *aTable, const char * name) {
-    //printf("LOOKUP %s\n", name);
+
     if( !aTable ) {
-        //printf("could not find name %s\n", name);
         return NULL;
     }
     //Check current table
     int tabSize = aTable->size;
     int hashVal = HashName(tabSize, name);
-    struct SymEntry * entry = aTable->contents[hashVal]; //aTable[contents + hashVal]
+    struct SymEntry * entry = aTable->contents[hashVal];
     struct SymEntry * search = FindNameInList(entry, name);
     // Recursively check parent table if no result found
     return search ? search : LookupName(aTable->parent, name);
@@ -134,6 +127,7 @@ LookupName(struct SymTab *aTable, const char * name) {
 
 struct SymEntry *
 AddNameToList(struct SymTab *aTable, const char *name, int hashVal) {
+
     struct SymEntry * entryIndex = calloc(1, sizeof(struct SymEntry));
     entryIndex->name = (name) ? strdup(name) : NULL;
     entryIndex->table = aTable;
@@ -146,19 +140,14 @@ AddNameToList(struct SymTab *aTable, const char *name, int hashVal) {
     }
     else {
         entryIndex->next = head;
-        aTable->contents[hashVal] = entryIndex;
-        // while( entryPoint->next ) {
-        //     entryPoint = entryPoint->next;
-        // }
-        // entryPoint->next = entryIndex;
+        aTable->contents[hashVal] = entryIndex; //Append to start of list
     }
-    //printf("added entry with name %s at mem %p with hash %d\n", name, entryIndex, hashVal);
     return entryIndex;
 }
 
 struct SymEntry *
 EnterName(struct SymTab *aTable, const char *name) {
-    //printf("ENTER name %s\n", name);
+
     int hashVal = HashName(aTable->size, name);
     struct SymEntry * myEntry = aTable->contents[hashVal];
     // Lookup name, if no entry with name found in SymEntry list, add one.
@@ -174,7 +163,7 @@ SetAttr(struct SymEntry *anEntry, int kind, void *attributes) {
 
 int
 GetAttrKind(struct SymEntry *anEntry) {
-    return anEntry ? anEntry->attrKind : -999;
+    return anEntry ? anEntry->attrKind : -9999;
 }
 
 void *
@@ -198,30 +187,28 @@ GetScopeName(struct SymTab *aTable) {
 }
 
 char *
-GenScopePath(struct SymTab * cTab, char * str) {
-    //char * cName = strdup(cTab->scopeName);
-    int cNameLen = strlen(cTab->scopeName);
-    char * retStr;
-    if(!str) {
-        retStr = malloc(cNameLen + 1); //nullchar and '>'
-        strcpy(retStr, cTab->scopeName);
-    } else {
-        int existingLen = strlen(str);
-        retStr = malloc(cNameLen + existingLen + 2);
-        strcpy(retStr, cTab->scopeName);
-        strcat(retStr, ">");
-        strcat(retStr, str);
-    }
+GenScopePath(struct SymTab * aTable) {
+    char * retStr = strdup(aTable->scopeName);
+    struct SymTab * cTable = aTable->parent;
 
-    if(cTab->parent) {
-        return GenScopePath(cTab->parent, retStr);
+    while( cTable ) {
+        char * prev = strdup(retStr);
+        char * next = strdup(cTable->scopeName);
+        free(retStr);
+        retStr = malloc(strlen(prev) + strlen(next) + 2); //nullchar & '>'
+        strcpy(retStr, next);
+        strcat(retStr, ">");
+        strcat(retStr, prev);
+        free(prev);
+        free(next); //free intermediate strings
+        cTable = cTable->parent;
     }
     return retStr;
 }
 
 char *
 GetScopePath(struct SymTab *aTable) {
-    return GenScopePath(aTable, NULL);
+    return GenScopePath(aTable);
 }
 
 struct SymTab *
