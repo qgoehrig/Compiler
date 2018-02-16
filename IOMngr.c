@@ -1,6 +1,6 @@
 /* Author:      Quentin Goehrig
    Created:     02/12.18
-   Resources:   -
+   Resources:   https://linux.die.net/man/3/memmove - memmove
 */
 
 #include <stdio.h>
@@ -32,7 +32,9 @@ bool OpenSource(const char * aFileName, bool mode) {
     echoMode = mode;
     printf("Opened Source with with echoMode: ");
     printf(echoMode ? "on\n" : "off\n");
-    messageCnt, bufLen = 0;
+    messageCnt, nextPos = 0;
+    //bufLen = MAXLINE + (26 * 3); //for the extra highlighted
+    bufLen = 0;
     curLine = 1;
     return sourceFile != NULL;
 }
@@ -42,24 +44,68 @@ void CloseSource() {
     // perform other final actions
 }
 
-int lastCharCol = 0;
+// struct message getNextMessage(int msgIndex) {
+//     if(messages[msgIndex]) {
+//         return messages[msgIndex];
+//     }
+//     return NU
+// }
 
 char GetSourceChar() {
     char cChar = fgetc( sourceFile );
-    buffer[bufLen] = cChar;
+    buffer[nextPos] = cChar;
+    nextPos++;
+    bufLen++;
+    struct message nextMessage;
     if(cChar == '\n') {
-        //if (messages exist || echoMode) print,
-        //sprintf(buffer);
-        printf("%s", buffer);
-        memset(buffer, 0, MAXLINE);
-        //
+        //check for echomode
+        char printChar = 65; // A
+        int bufferIndex = 0;
+        int readMsgIndex = 0;
+        int nextMsgStart, nextMsgEnd;
+        nextMessage = messages[readMsgIndex];
+        nextMsgStart = nextMessage.startColumn;
+        nextMsgEnd = nextMessage.endColumn;
+        bool onToken = false;
+
+        printf("%d: ", curLine);
+        while( bufferIndex < bufLen ) {
+            if( onToken ) {
+                printf("%c", buffer[bufferIndex]);
+                if( bufferIndex == nextMsgEnd ) {
+                    printf("\033[0m");
+                    onToken = false;
+                    readMsgIndex++;
+                    nextMessage = messages[readMsgIndex];
+                    nextMsgStart = nextMessage.startColumn;
+                    nextMsgEnd = nextMessage.endColumn;
+                }
+                bufferIndex++;
+            }
+            else if( bufferIndex == nextMsgStart ) {
+                //print letter and start highlighting (ditch cast)
+                printf("\033[7m %c \033[0m\033[4m", printChar);
+                onToken = true;
+                printChar++;
+                bufferIndex++;
+            }
+            else {
+                printf("%c", buffer[bufferIndex]);
+                bufferIndex++;
+            }
+
+        }
+        printf("\n");
+        memset(buffer, 0, MAXLINE); // Reset buffer
         curLine++;
+        nextPos = 0;
     }
-    lastCharCol++;
     return cChar;
 }
 
 void PostMessage(int aColumn, int aLength, const char * aMessage) {
+    //printf("MESSAGE: %s, @COL: %d, LENGTH: %d\n", aMessage, aColumn, aLength);
+    //printf("ORIG: %d, CONSTRAIN:%d\n", aColumn, CONSTRAIN(aColumn, 0, MAXLINE));
     char * sequence = malloc( aLength + 4 ); //
     char start = buffer[aColumn];
     struct message cMessage = {
@@ -78,5 +124,5 @@ int GetCurrentLine() {
 }
 
 int GetCurrentColumn() {
-    return lastCharCol; //?
+    return nextPos;
 }
