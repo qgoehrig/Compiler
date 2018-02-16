@@ -44,16 +44,9 @@ void CloseSource() {
     // perform other final actions
 }
 
-// struct message getNextMessage(int msgIndex) {
-//     if(messages[msgIndex]) {
-//         return messages[msgIndex];
-//     }
-//     return NU
-// }
-
 char GetSourceChar() {
     char cChar = fgetc( sourceFile );
-    buffer[nextPos] = cChar;
+    buffer[bufLen] = cChar;
     nextPos++;
     bufLen++;
     struct message nextMessage;
@@ -61,51 +54,56 @@ char GetSourceChar() {
         //check for echomode
         char printChar = 65; // A
         int bufferIndex = 0;
-        int readMsgIndex = 0;
+        nextPos = 1;
+        int msgIndex = 0;
         int nextMsgStart, nextMsgEnd;
-        nextMessage = messages[readMsgIndex];
+        nextMessage = messages[msgIndex];
         nextMsgStart = nextMessage.startColumn;
         nextMsgEnd = nextMessage.endColumn;
         bool onToken = false;
+        //printf("%d: ", curLine);
 
-        printf("%d: ", curLine);
         while( bufferIndex < bufLen ) {
-            if( onToken ) {
-                printf("%c", buffer[bufferIndex]);
-                if( bufferIndex == nextMsgEnd ) {
-                    printf("\033[0m");
-                    onToken = false;
-                    readMsgIndex++;
-                    nextMessage = messages[readMsgIndex];
-                    nextMsgStart = nextMessage.startColumn;
-                    nextMsgEnd = nextMessage.endColumn;
-                }
-                bufferIndex++;
-            }
-            else if( bufferIndex == nextMsgStart ) {
-                //print letter and start highlighting (ditch cast)
+            char cChar = buffer[nextPos];
+            // Encounter start of token message
+            if( !onToken && (msgIndex < messageCnt) && (nextPos == nextMsgStart) ) {
+                // Print letter and start underlining
                 printf("\033[7m %c \033[0m\033[4m", printChar);
                 onToken = true;
                 printChar++;
-                bufferIndex++;
             }
+            // Encounter end of token message
+            else if( onToken && (bufferIndex == nextMsgEnd) ) {
+                printf("%c", cChar);
+                printf("\033[0m"); // Print current char and stop underlining
+                onToken = false;
+                msgIndex++;
+                nextMessage = messages[msgIndex];
+                nextMsgStart = nextMessage.startColumn;
+                nextMsgEnd = nextMessage.endColumn;
+            }
+            // Encounter reg character
             else {
                 printf("%c", buffer[bufferIndex]);
-                bufferIndex++;
             }
 
+            bufferIndex++;
+            nextPos++;
         }
-        printf("\n");
+        // Finish
         memset(buffer, 0, MAXLINE); // Reset buffer
+        bufLen, messageCnt, msgIndex, bufferIndex = 0; // Reset vars
+        msgIndex = 0;
         curLine++;
-        nextPos = 0;
+        nextPos = 1;
+        bufferIndex = 0;
     }
     return cChar;
 }
 
 void PostMessage(int aColumn, int aLength, const char * aMessage) {
-    //printf("MESSAGE: %s, @COL: %d, LENGTH: %d\n", aMessage, aColumn, aLength);
-    //printf("ORIG: %d, CONSTRAIN:%d\n", aColumn, CONSTRAIN(aColumn, 0, MAXLINE));
+    //printf("col: %d, len: %d, msg: %s\n", aColumn, aLength, aMessage);
+    //printf("%s", aMessage);
     char * sequence = malloc( aLength + 4 ); //
     char start = buffer[aColumn];
     struct message cMessage = {
