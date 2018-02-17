@@ -71,15 +71,16 @@ void printLineAndMessages() {
     printMessages();
 }
 
+// Upon closing, checks to see if buffer has reached EOF
+// If it has not, flush buffer and print remaining line and messages
 void CloseSource() {
     if( !finished ) {
         printLineAndMessages();
     }
-    //clear memory?
     fclose( sourceFile );
 }
 
-// Returns true when line is not at EOF, otherwise false
+// Fills buffer with next line. Returns true when line is not at EOF, else false
 bool fillBuffer() {
     char * valid = fgets( buffer, MAXLINE, sourceFile );
     bufLen = strlen(buffer);
@@ -113,7 +114,7 @@ void PostMessage(int aColumn, int aLength, const char * aMessage) {
     }
     if( messageCnt == 0 || ((messageCnt < 26) && (prevMsgEndCol <= aColumn)) ){
         struct message cMessage = {
-            aColumn, (aColumn + aLength), strdup(aMessage)
+            aColumn, (aColumn + aLength), aMessage
         };
         messages[messageCnt] = cMessage;
         messageCnt++;
