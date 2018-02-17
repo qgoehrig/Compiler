@@ -1,6 +1,7 @@
 /* Author:      Quentin Goehrig
    Created:     02/12.18
    Resources:   https://linux.die.net/man/3/memmove - memmove
+                http://man7.org/linux/man-pages/man3/printf.3.html - print format
 */
 
 #include <stdio.h>
@@ -38,10 +39,6 @@ bool OpenSource(const char * aFileName, bool mode) {
     return sourceFile != NULL;
 }
 
-void CloseSource() {
-    fclose( sourceFile ); // perform other final actions
-}
-
 void printMessages() {
     for(int i = 0; i < messageCnt; i++) {
         printf("       -%c %s\n", (char) i + 65, messages[i].message);
@@ -49,7 +46,16 @@ void printMessages() {
 }
 bool init = false;
 bool finished = false;
-bool highlight = false;
+bool highlighting = false;
+int highlightEndCol = -1;
+
+void CloseSource() {
+    if( !finished ) { //flush buffer and print messages
+        printf("%s", buffer);
+        printf("%s", messages[0].message);
+    }
+    fclose( sourceFile );
+}
 
 bool fillBuffer() {
     //printf("filling\n");
@@ -62,46 +68,47 @@ bool fillBuffer() {
 }
 
 char GetSourceChar() {
+    if( curLine == 3 ) {
+        char * c = strdup(buffer);
+        int a = 3;
+        int np = nextPos;
+        int bl = bufLen;
+    }
     if( !init ) {
         fillBuffer();
         init = true;
     }
     if( nextPos == bufLen ) {
-        printf("    %d: ", curLine);
+        if( !echoMode || messageCnt > 0) {
+            printf("%*d: ", 5, curLine);
+        }
         int msgIndex = 0;
         struct message msg = messages[msgIndex];
         for(int i = 0; i < bufLen; i++) {
-            if(msgIndex < messageCnt && msg.startColumn == i + 1) {
-                printf("\033[7m %c \033[0m", (char) msgIndex + 65);
+            if( highlighting && highlightEndCol == i + 1) {
+                printf("\033[0m");
+                highlighting = false;
+            }
+            else if(msgIndex < messageCnt && msg.startColumn == i + 1) {
+                printf("\033[7m %c \033[0m\033[4m", (char) msgIndex + 65);
+                highlightEndCol = msg.endColumn;
+                highlighting = true;
                 msgIndex++;
                 msg = messages[msgIndex];
             }
-            printf("%c", buffer[i]);
+            if( !echoMode || messageCnt > 0 ) {
+                printf("%c", buffer[i]);
+            }
         }
         printMessages();
         messageCnt = 0;
         if( !fillBuffer() ) {
-            //printf("DONE YOU PIECE OF SHIT\n");
+            //printf("cunt\n");
             finished = true;
+            //flush buffer
         }
     }
     char c = finished ? EOF : buffer[nextPos];
-    //printf("%c", c);
-    // if( c == '\n' ) {
-    //     // printf("    %d: msgs: %d", curLine, messageCnt);
-    //     // int msgIndex = 0;
-    //     // struct message msg = messages[msgIndex];
-    //     for(int i = 0; i < bufLen; i++) {
-    //         // if(msgIndex < messageCnt && msg.startColumn == i + 1) {
-    //         //     printf("\033[7m %c \033[0m", (char) msgIndex + 65);
-    //         //     msgIndex++;
-    //         //     msg = messages[msgIndex];
-    //         // }
-    //         printf("%c", buffer[i]);
-    //     }
-    //     //printf("    %d: %s", curLine, buffer);
-    //     messageCnt = 0;
-    // }
     nextPos++;
     return c;
 }
