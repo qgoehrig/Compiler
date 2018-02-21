@@ -92,6 +92,15 @@ iotest-2: IOMngrDriver
 		fi
 		rm out
 
+#===========================
+# Scanner Project
+ScannerDriver.o: ScannerDriver.c Scanner.h SymTab.h ScanTokens.h
+ScannerDriver: 	ScannerDriver.o Scanner.o SymTab.o IOMngr.o
+
+scantest: 	ScannerDriver
+	./ScannerDriver
+
+
 
 
 # Other

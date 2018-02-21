@@ -1,75 +1,38 @@
 # CS 442 - Compiler Construction
-## IOMngr Repository
+## Scanner Assignment Respository
 
-This repository contains files to be added to your main project repository to include the IOMngr module. The IOMngr is responsible for
+This repository contains files to be added to your main assignment repository to include the Scanner portion of the project. The repository contains
 
-* returning source characters to the caller one at a time
-* associating messages (e.g. compiler errors or warnings) with source lines
-* writing processed source lines to stdout along with associated messages
-
-The repository contains
-
-- IOMngrDriver.c
-    - This is the test driver for the assignment. This driver opens the source and listing files and repeatedly requests the next character from the source file. When specific patterns of characters are seen it posts appropriate messages.  
-
-- IOMngr.h
-    - The include file defining the functions implemented by the IOMngr. 
-
-- IOMngr.c
-	- A stub for the implementation file. 
-	
-- IOMngrSource
-    - A source file for testing.
-
-- IOMngrSource-#.out
-    - The output from testing. 
-
+- ScannerDriver.c
+ - This is the test driver for this portion of the project. The driver opens source and listing files and repeatedly requests the next token from the scanner. Depending on the token type different actions are taken. The "@INIT" token causes a symbol table to be created. Identifiers are stored in this symbol table. A running sum of integer literal tokens and float literal tokens is maintained. The "@DUMP" token displays the integer and float sums and the symbol table contents is sorted order.  
+- Scanner.l
+ - This is the starting point for the scanner definition. It contains the outline of the needed scanner rules. 
+- Scanner.h
+ - This exposes as an include file the functions and data provided by the lex/flex generated scanner. 
+- ScanTokens.h
+ - This is an include file containing defines for the various token types. 
 - Makefile
-    - An extended Makefile containing the rules required for building and testing the project. 
-
+ - The Makefile containing new rules and definitions for the scanner component. 
+- ScannerSource
+ - The input source.
+- ScannerListing
+ - The listing output of the source (lines with messages only).
+- ScannerOutput
+ - The stderr output of the driver. 
+ - 
 ## The Assignment
 
-Complete the IOMngr.c file by implementing the functions defined in SymTab.h. Once the source file is opened, GetSourceChar() will return the next available character or EOF if the end of file has been encountered. GetSourceChar() is also responsible for echoing source lines to stdout. Depending on the mode of operation either all lines or only lines with associated messages are echoed to stdout. 
-
-When written to stdout the source line
-
-```
-longvar = 4713 - 22;
-```
-
-will appear as
-
-![LineListing](LineListing.png)
-
-The source line is preceeded by a line number (use a max of 5 digits). Messages are associated to columns in the source with marker tags. Highlighting of marker tags and underlining of source text is accomplished using ANSI Terminal Escape Codes. The necessary escape codes, which can be included in the printf format string, are 
-
-* ``\033[7m`` - turn on reverse highlighting
-* ``\033[4m`` - turn on underlining
-* ``\033[0m`` - reset all attributes
-
-Because of the required behavior for marking message locations in the source line and displaying messages immediately below source lines it is necessary for the implementation to read source lines in their entirety, buffer them internally, and return single characters from the buffer as requested. Prior to reading a new buffer line the current line must be written to stdout along with any associated messages. Depending on the lineEchoMode set when OpenSource() is called either all lines are written to stdout or only lines with associated messages. 
-
-The IOMngrDriver implements a table based state machine to recognize a few simple token types. Some of these token types generate messages. The driver tests that GetSourceChar() will continue to return EOF after the end of file is encountered by requiring that EOF be returned 3 times before exiting. If PostMessage() is done for the EOF token the message lines will all appear to use marker "A" since there really is no line corresponding to the EOF.
-
-The driver supports two command line options. 
-
-* ``-m`` - sets lineEchoMode to true
-* ``-u`` - close and exit on unknown token
-
-The first controls whether all lines are echoed to output or only lines with messages. The second is used to test output is handled correctly when processing is aborted before the end of the input file. 
-
-The project can be tested with ``make iotest`` which will invoke 3 different tests (e.g. all lines listed, only message lines listed, exit on unknown token).
-
-## What to Do
+ - Scanner.l contains rules for the @INIT, @DUMP and Identifier tokens. Extend these rules to incorporate nestable comments (both "/* ... */" comments, which may be nested, and "through to the end of line" comments "// ...."). Include the code necessary to only return tokens when not inside a comment. Also include rules for integers, floats and at least one symbol. You will need to add defines for these token types to ScanTokens.h. Integer and float literals should allow an immediately preceding "-" to negate values. This can either be done with separate regular expressions for the positive and negative cases or using the lex/flex question mark operator (e.g. "a?" represents an optional "a").
+ - ScannerDriver.c contains most of the required code. The cases for @INIT and @DUMP are supplied. @INIT creates a symbol table and @DUMP displays the contents of the table. These write to stderr. You need to supply code for the IDENT_TOK case to add the token text to the symbol table with an appropriate attributes structure keeping track of the occurrence count. This case should set messages indicating the action taken (i.e. no action because no symboltable, found with an occurrence count and added as new identifier). You will also need to add cases for integer and float literals. These cases should update the accumulated sum of integer and float literals. You may use the ``atoi()`` and ``atof()`` functions to convert the token text to numeric values. Both functions are able to handle negative values.The @DUMP case displays the running sum of integer and float literals and the symbol table contents. 
+ 
+## What To Do
 
 - DO NOT FORK this repository on Gitlab, instead
-- On your development machine, in a location different than your assignment repository, clone this project. Your original Project repository will continue to accumulate all files for the project. 
-- Copy the files from this repository to your Project repository. The new Makefile will replace the existing copy.
+- On your development machine, in a location different than your assignment repository, clone this project. Your assignment repository will continue to accumulate all files for the project. 
+- Copy the files from this repository to your assignment repository.
 - Discard the clone of this repository.
-- Complete the IOMngr.c file by implementing the required functionality.
-- When complete, 
-    - "make clean" to remove object files and executables
-    - use git to add and commit your changes to your local repository
-    - use git to push the project back up to your GitLab account
-    - I should already be a member of your project repository
-    - create an issue on your project repository, listing me as assignee, with a title of "Submit for grading"
+- Implement the required capabilities. 
+- When complete, "make clean" to remove object files and executables, use git to add and commit your changes and push the project back up to your repository.
+- Finaly, create an issue on your repository, with me as the reporter assignee, indicating that it is ready for grading. 
+
+
