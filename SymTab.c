@@ -77,7 +77,7 @@ struct SymTab *
 DestroySymTab(struct SymTab *aTable) {
     struct SymTab * parent = aTable->parent;
     InvokeOnEntries(aTable, false, EntryFree, 0, NULL);
-    free(aTable->scopeName);
+    if(aTable->scopeName) { free(aTable->scopeName); }
     free(aTable->contents);
     free(aTable);
     return parent;
