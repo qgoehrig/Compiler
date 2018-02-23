@@ -64,6 +64,21 @@ int main(int argc, char **argv) {
           sprintf(actionMessage," -- No SymbolTable");
           break;
         }
+        struct SymEntry * identEntry = LookupName(table, yytext);
+        if(identEntry) {
+            void * attr = GetAttr(identEntry);
+            sprintf(actionMessage," -- occurence %d", attr->cnt);
+        }
+        else {
+            EnterName(table, yytext);
+            sprintf(actionMessage," -- new ident");
+        }
+        // SymEntry * ident = LookupName(yytext));
+        // if(ident) {
+        //     printf("token %d \"%s\"\n", Token, yytext);
+        // }
+
+        //nt g = LookupName(Token)
         //
         // code
         //

@@ -10,6 +10,7 @@ Digit   [0-9]
 	}
 
 bool shouldLog = false;
+bool IN_COMMENT = false;
 
 #define RETURN(val) \
   { if (shouldLog) fprintf(stderr,"Token#=%d, Length=%zu, Text=\"%s\"\n",val,yyleng,yytext); \
