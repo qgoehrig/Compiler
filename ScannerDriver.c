@@ -64,14 +64,25 @@ int main(int argc, char **argv) {
           sprintf(actionMessage," -- No SymbolTable");
           break;
         }
-        struct SymEntry * identEntry = LookupName(table, yytext);
-        if(identEntry) {
-            void * attr = GetAttr(identEntry);
-            sprintf(actionMessage," -- occurence %d", attr->cnt);
-        }
-        else {
+        struct SymEntry * entry = LookupName(table, yytext);
+        if(!identEntry) {
             EnterName(table, yytext);
             sprintf(actionMessage," -- new ident");
+        }
+        else {
+            void * attrs = GetAttr(entry); //might have to change to struct pnter
+            if(!attr) {
+                // Create new Attributes
+                getAttr = malloc(sizeof(struct Attributes));
+                getAttr->cnt = 1;
+                setAttr(entry, IGNORE_KIND, );
+                void * attr = GetAttr(identEntry);
+                sprintf(actionMessage," -- occurence %d", attr->cnt);
+            }
+            else {
+
+            }
+            sprintf(actionMessage," -- occurence %d", attr->cnt);
         }
         // SymEntry * ident = LookupName(yytext));
         // if(ident) {

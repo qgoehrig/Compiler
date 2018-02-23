@@ -11,6 +11,7 @@ Digit   [0-9]
 
 bool shouldLog = false;
 bool IN_COMMENT = false;
+int lineCount = 1;
 
 #define RETURN(val) \
   { if (shouldLog) fprintf(stderr,"Token#=%d, Length=%zu, Text=\"%s\"\n",val,yyleng,yytext); \
@@ -24,6 +25,6 @@ bool IN_COMMENT = false;
 \@DUMP                          { if (!IN_COMMENT) RETURN(DUMP_TOK); }
 {Letter}({Letter}|{Digit})*     { if (!IN_COMMENT) RETURN(IDENT_TOK); }
 [ \t]                           { }
-[\n]                            { }
+[\n]                            { lineCount++ }
 .                               { }
 %%
