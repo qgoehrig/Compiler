@@ -39,9 +39,10 @@ bool OpenSource(const char * aFileName, bool mode) {
     return sourceFile != NULL;
 }
 
-void printMessages() {
+void printAndClearMessages() {
     for(int i = 0; i < messageCnt; i++) {
         printf("       -%c %s\n", (char) i + 65, messages[i].message);
+        free(messages[i].message);
     }
 }
 
@@ -68,7 +69,7 @@ void printLineAndMessages() {
             printf("%c", buffer[i]);
         }
     }
-    printMessages();
+    printAndClearMessages();
 }
 
 // Upon closing, checks to see if buffer has reached EOF
@@ -89,6 +90,7 @@ bool fillBuffer() {
     return valid != NULL;
 }
 
+// Returns the source char and prints line+messages if pos is at end of buffer
 char GetSourceChar() {
     if( !init ) {
         fillBuffer();
@@ -106,6 +108,7 @@ char GetSourceChar() {
     return c;
 }
 
+// Allocate space for string message in struct message
 // Checks for overlaping messages and 26 message limit before posting message
 void PostMessage(int aColumn, int aLength, const char * aMessage) {
     int prevMsgEndCol = 0;
@@ -113,10 +116,9 @@ void PostMessage(int aColumn, int aLength, const char * aMessage) {
         prevMsgEndCol = messages[messageCnt - 1].endColumn;
     }
     if( messageCnt == 0 || ((messageCnt < 26) && (prevMsgEndCol <= aColumn)) ){
-        struct message cMessage = {
-            aColumn, (aColumn + aLength), aMessage
-        };
-        messages[messageCnt] = cMessage;
+        messages[messageCnt].startColumn = aColumn;
+        messages[messageCnt].endColumn = aColumn + aLength;
+        messages[messageCnt].message = strdup(aMessage);
         messageCnt++;
     }
 }
