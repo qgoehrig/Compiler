@@ -11,6 +11,7 @@ Digit   [0-9]
 
 bool shouldLog = false;
 bool IN_COMMENT = false;
+int commentNextLvl = 0;
 int lineCount = 1;
 
 #define RETURN(val) \
@@ -25,6 +26,9 @@ int lineCount = 1;
 \@DUMP                          { if (!IN_COMMENT) RETURN(DUMP_TOK); }
 {Letter}({Letter}|{Digit})*     { if (!IN_COMMENT) RETURN(IDENT_TOK); }
 [ \t]                           { }
-[\n]                            { lineCount++ }
+[\n]                            { }
 .                               { }
+-?{Digit}+						{ RETURN(INT_TOK); }
+-?{Digit}+\.{Digit}+			{ RETURN(FLOAT_TOK); }
+
 %%

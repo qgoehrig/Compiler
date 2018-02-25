@@ -3,3 +3,4 @@
 #define IDENT_TOK   3
 #define INT_TOK     4
 #define FLOAT_TOK   5
+#define NEWLINE_TOK 6
