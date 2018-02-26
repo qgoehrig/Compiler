@@ -43,18 +43,14 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
+  int lineNum = 1;
   int intSum = 0;
   float floatSum = 0;
-  int tokenCount = 0;
-  int numPosts = 0;
+  bool shouldPrint;
 
   while ((Token = yylex()) != 0) {
 
-    memset(actionMessage, 0, sizeof actionMessage);
-    memset(message, 0, sizeof message);
     sprintf(actionMessage,"");
-    tokenCount++;
-    //printf("token= %s\n",yytext);
     switch(Token) {
 
       case INIT_TOK: {
@@ -77,6 +73,8 @@ int main(int argc, char **argv) {
             entry = EnterName(table, yytext);
             struct Attributes * newAttr = malloc(sizeof(struct Attributes));
             newAttr->cnt = 1; //set other stuff here too
+            newAttr->firstLine = lineNum;
+            newAttr->firstColumn = (GetCurrentColumn()-yyleng);
             SetAttr(entry, IGNORE_KIND, newAttr);
             sprintf(actionMessage," -- new ident");
         }
@@ -88,14 +86,17 @@ int main(int argc, char **argv) {
       } break;
       case INT_TOK: {
           int i = atoi(yytext);
-          //sprintf(actionMessage, "%d", i);
+          sprintf(actionMessage, "%d", i);
           intSum+=i;
       } break;
       case FLOAT_TOK: {
           float f = atof(yytext);
-          //sprintf(actionMessage, "%f", f);
+          sprintf(actionMessage, "%f", f);
           floatSum+=f;
         // code
+      } break;
+      case NEWLINE_TOK: {
+          lineNum++;
       } break;
       case DUMP_TOK: {
         fprintf(stderr,"---------\n");
@@ -124,17 +125,21 @@ int main(int argc, char **argv) {
         free(stats);
       } break;
     }
-    //printf("Q=>Token#=%d, Length=%lu, Text=\"%s\"%*c%s\n",Token,yyleng,yytext,(int)(15-yyleng),' ',actionMessage);
-    // Handle checking of length ultimate
-    sprintf(message,"Token#=%d, Length=%lu, Text=\"%s\"%*c%s",Token,yyleng,yytext,(int)(15-yyleng),' ',actionMessage);
-    //printf("%s\n", message);
-    // depending on the token kind, current column may be at the next char in the input
-    // or the last char of the token, if current column minus yyleng is neg force it to zero
-    int col = GetCurrentColumn()-yyleng;
-    if (col < 0) col = 0;
-    numPosts++;
-    //printf("col=%d, len=%d, msg=%s\n", col, yyleng, message);
-    PostMessage(col,yyleng,message);
+    // TODO: Add extra vaildation rules for checking of length of actionmsg and msg
+    shouldPrint = Token != NEWLINE_TOK && Token != OTHER_TOK && Token != WS_TOK;
+    if( shouldPrint ) {
+        sprintf(message,"Token#=%d, Length=%lu, Text=\"%s\"%*c%s",Token,yyleng,yytext,(int)(15-yyleng),' ',actionMessage);
+        // depending on the token kind, current column may be at the next char in the input
+        // or the last char of the token, if current column minus yyleng is neg force it to zero
+
+        int col = GetCurrentColumn()-yyleng;
+        if (col < 0) col = 0;
+        if(Token == EQUAL_TOK) {
+            col++;
+        }
+        PostMessage(col,yyleng,message);
+    }
+
   }
   CloseSource();
 }

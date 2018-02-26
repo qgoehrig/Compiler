@@ -11,8 +11,7 @@ Digit   [0-9]
 
 bool shouldLog = false;
 bool IN_COMMENT = false;
-int commentNextLvl = 0;
-int lineCount = 1;
+int commLayers = 0;
 
 #define RETURN(val) \
   { if (shouldLog) fprintf(stderr,"Token#=%d, Length=%zu, Text=\"%s\"\n",val,yyleng,yytext); \
@@ -22,13 +21,17 @@ int lineCount = 1;
 %}
 
 %%
+"//".*							{ }
+"/*"							{ commLayers++; IN_COMMENT = true; }
+"*/"							{ commLayers--; if(commLayers == 0) IN_COMMENT = false; }
 \@INIT                          { if (!IN_COMMENT) RETURN(INIT_TOK); }
 \@DUMP                          { if (!IN_COMMENT) RETURN(DUMP_TOK); }
 {Letter}({Letter}|{Digit})*     { if (!IN_COMMENT) RETURN(IDENT_TOK); }
-[ \t]                           { }
-[\n]                            { }
+-?({Digit}|{Digit}+)			{ if (!IN_COMMENT) RETURN(INT_TOK); }
+-?{Digit}+\.{Digit}+			{ if (!IN_COMMENT) RETURN(FLOAT_TOK); }
+[=]								{ if (!IN_COMMENT) RETURN(EQUAL_TOK); }
 .                               { }
--?{Digit}+						{ RETURN(INT_TOK); }
--?{Digit}+\.{Digit}+			{ RETURN(FLOAT_TOK); }
+[ \t]                           { }
+[\n]                            { RETURN(NEWLINE_TOK); }
 
 %%

@@ -1,6 +1,9 @@
-#define INIT_TOK		1
+#define INIT_TOK	1
 #define DUMP_TOK    2
 #define IDENT_TOK   3
 #define INT_TOK     4
 #define FLOAT_TOK   5
-#define NEWLINE_TOK 6
+#define EQUAL_TOK   6
+#define NEWLINE_TOK 7
+#define OTHER_TOK   8
+#define WS_TOK      9
