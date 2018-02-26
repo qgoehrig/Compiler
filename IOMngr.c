@@ -30,7 +30,7 @@ int messageCnt;
 bool init = false;
 bool finished = false;
 bool highlighting = false;
-int highlightEndCol = -1;
+int highlightEndCol = -999;
 
 bool OpenSource(const char * aFileName, bool mode) {
     sourceFile = fopen(aFileName, "r");
@@ -54,11 +54,13 @@ void printLineAndMessages() {
     int msgIndex = 0;
     struct message msg = messages[msgIndex];
     for(int i = 0; i < bufLen; i++) {
-        if( highlighting && highlightEndCol == i + 1) {
+
+        char debugChar = buffer[i];
+        if( highlighting && highlightEndCol == i ) {
             printf("\033[0m");
             highlighting = false;
         }
-        else if(msgIndex < messageCnt && msg.startColumn == i + 1) {
+        if(msgIndex < messageCnt && msg.startColumn == i ) {
             printf("\033[7m %c \033[0m\033[4m", (char) msgIndex + 65);
             highlightEndCol = msg.endColumn;
             highlighting = true;
@@ -68,6 +70,7 @@ void printLineAndMessages() {
         if( !echoMode || messageCnt > 0 ) {
             printf("%c", buffer[i]);
         }
+
     }
     printAndClearMessages();
 }
@@ -104,6 +107,7 @@ char GetSourceChar() {
         }
     }
     char c = finished ? EOF : buffer[nextPos];
+    //char c = buffer[nextPos] ? buffer[nextPos] : EOF;
     nextPos++;
     return c;
 }
@@ -111,7 +115,7 @@ char GetSourceChar() {
 // Allocate space for string message in struct message
 // Checks for overlaping messages and 26 message limit before posting message
 void PostMessage(int aColumn, int aLength, const char * aMessage) {
-    int prevMsgEndCol = 0;
+    int prevMsgEndCol = MAXLINE;
     if( messageCnt > 0) {
         prevMsgEndCol = messages[messageCnt - 1].endColumn;
     }
@@ -128,5 +132,5 @@ int GetCurrentLine() {
 }
 
 int GetCurrentColumn() {
-    return nextPos;
+    return nextPos - 1;
 }
