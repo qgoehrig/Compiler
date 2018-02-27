@@ -1,6 +1,8 @@
-/* ScannerDriver.c
-
+/* Author:      Quentin Goehrig
+   Created:     02/18.18
+   Resources:   https://stackoverflow.com/questions/3662899/understanding-the-dangers-of-sprintf
 */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -23,6 +25,13 @@ void collectEntries(struct SymEntry * entry, int cnt, void * entryArray) {
   ((struct SymEntry **)entryArray)[cnt] = entry;
 }
 
+// Free an entry's attributes, used with InvokeOnEntries
+// Used with DoForEntries can be used
+void clearAttr(struct SymEntry * entry, int cnt, void * emptyArgs) {
+    struct Attributes * attr = GetAttr(entry);
+    if (attr) free(attr);
+}
+
 // used with qsort to sort list of symbol table entries
 int entryCmp(const void * A, const void * B) {
   // A is pointer to element of array which contains a pointer to a struct SymEntry
@@ -43,9 +52,8 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  int lineNum = 1;
   int intSum = 0;
-  float floatSum = 0;
+  float floatSum = 0.0;
   bool shouldPrint;
 
   while ((Token = yylex()) != 0) {
@@ -57,12 +65,6 @@ int main(int argc, char **argv) {
         if (!table) table = CreateSymTab(20,"main",NULL);
       } break;
       case IDENT_TOK: {
-        // place the identifier in the table (if it exists), if new then create and init
-        // attributes structure, if already in table then update attributes cnt field, in
-        // each case set actionMessage with one of
-        // sprintf(actionMessage," -- No SymbolTable");
-        // sprintf(actionMessage," -- occurrence %d",attr->cnt);
-        // sprintf(actionMessage," -- new ident");
         if (!table) {
           sprintf(actionMessage," -- No SymbolTable");
           break;
@@ -73,7 +75,7 @@ int main(int argc, char **argv) {
             entry = EnterName(table, yytext);
             struct Attributes * newAttr = malloc(sizeof(struct Attributes));
             newAttr->cnt = 1; //set other stuff here too
-            newAttr->firstLine = lineNum;
+            newAttr->firstLine = GetCurrentLine();
             newAttr->firstColumn = (GetCurrentColumn()-yyleng);
             SetAttr(entry, IGNORE_KIND, newAttr);
             sprintf(actionMessage," -- new ident");
@@ -86,17 +88,13 @@ int main(int argc, char **argv) {
       } break;
       case INT_TOK: {
           int i = atoi(yytext);
-          sprintf(actionMessage, "%d", i);
+          //sprintf(actionMessage, "%d", i);
           intSum+=i;
       } break;
       case FLOAT_TOK: {
           float f = atof(yytext);
-          sprintf(actionMessage, "%f", f);
+          //sprintf(actionMessage, "%f", f);
           floatSum+=f;
-        // code
-      } break;
-      case NEWLINE_TOK: {
-          lineNum++;
       } break;
       case DUMP_TOK: {
         fprintf(stderr,"---------\n");
@@ -123,23 +121,28 @@ int main(int argc, char **argv) {
                  ((struct Attributes *) GetAttr(entries[i]))->cnt);
         }
         free(stats);
+        free(entries); // Free array to hold entry pointers
+         // Free the attributes of entries in the symTable
+        InvokeOnEntries(table,false,clearAttr,0,NULL);
       } break;
     }
-    // TODO: Add extra vaildation rules for checking of length of actionmsg and msg
+    // Only print tokens we care about. NEWLINE_TOK, OTHER_TOK, WS_TOk are not
+    // currently used. Use snprintf for safe printing.
     shouldPrint = Token != NEWLINE_TOK && Token != OTHER_TOK && Token != WS_TOK;
     if( shouldPrint ) {
-        sprintf(message,"Token#=%d, Length=%lu, Text=\"%s\"%*c%s",Token,yyleng,yytext,(int)(15-yyleng),' ',actionMessage);
+        snprintf(message,sizeof(message), "Token#=%d, Length=%lu, Text=\"%s\"%*c%s",Token,yyleng,yytext,(int)(15-yyleng),' ',actionMessage);
         // depending on the token kind, current column may be at the next char in the input
         // or the last char of the token, if current column minus yyleng is neg force it to zero
 
         int col = GetCurrentColumn()-yyleng;
         if (col < 0) col = 0;
         if(Token == EQUAL_TOK) {
-            col++;
+            col++; // Hotfix equals token col to actually highlight equals token
         }
         PostMessage(col,yyleng,message);
     }
 
   }
   CloseSource();
+  DestroySymTab(table);
 }
