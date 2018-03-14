@@ -100,6 +100,28 @@ ScannerDriver: 	ScannerDriver.o Scanner.o SymTab.o IOMngr.o
 scantest: 	ScannerDriver
 	./ScannerDriver
 
+scanextest: 	ScanExample
+	./ScanExample
+
+
+#===========================
+# Recursive Descent Project
+RDSupport.o:	RDSupport.c RDSupport.h
+RecDescent.o: 	RecDescent.c Scanner.h RDTokens.h
+RecDescent: 	RecDescent.o RDGrammar.o RDScanner.o RDSupport.o IOMngr.o
+
+rdtest: 	rdtest1 rdtest2 rdtest3 rdtest4 rdtest5
+
+rdtest1: 	RecDescent
+	./RecDescent -l RDSrc-1.src
+rdtest2: 	RecDescent
+	./RecDescent -l RDSrc-2.src
+rdtest3: 	RecDescent
+	./RecDescent -l RDSrc-3.src
+rdtest4: 	RecDescent
+	./RecDescent -l RDSrc-4.src
+rdtest5: 	RecDescent
+	./RecDescent -l RDSrc-5.src
 
 
 
