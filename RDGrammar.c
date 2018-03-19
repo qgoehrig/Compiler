@@ -1,5 +1,9 @@
-#include <stdbool.h>
+/* Author:      Quentin Goehrig
+   Created:     03/13.18
+   Resources:   
+*/
 
+#include <stdbool.h>
 #include "IOMngr.h"
 #include "RDGrammar.h"
 #include "RDTokens.h"
@@ -32,9 +36,8 @@ bool StmtSeq()
   case RBRACE_TOK:
     break;
   default:
-    ParseError("No option in switch");
+    ParseError("Statement Sequence Parse Error");
     return LEAVE_FAIL;
-    break;
   }
   return LEAVE_SUCC;
 }
@@ -44,9 +47,19 @@ bool Stmt()
 // <Stmt>    :== <Assign>
 {
   ENTER;
-  if(Decl()) return LEAVE_SUCC;
-  if(Assign()) return LEAVE_SUCC;
-  return LEAVE_FAIL;
+  switch(CurrentToken()) {
+      case INT_TOK:
+      case CHR_TOK:
+       if(!Decl()) return LEAVE_FAIL;
+       break;
+     case IDENT_TOK:
+       if(!Assign()) return LEAVE_FAIL;
+       break;
+     default:
+       ParseError("Statement Parse Error");
+       return LEAVE_FAIL;
+  }
+  return LEAVE_SUCC;
 }
 
 bool Decl()
@@ -71,7 +84,7 @@ bool Type()
         if(!Match(CHR_TOK)) return LEAVE_FAIL;
         break;
       default:
-        //ParseError("No option for type");
+        ParseError("Type Parse Error");
         return LEAVE_FAIL;
     }
     return LEAVE_SUCC;
@@ -99,7 +112,7 @@ bool MLst()
         case SEMI_TOK:
           break;
         default:
-          //ParseError("No opt in MLst");
+          ParseError("MList Parse Error");
           return LEAVE_FAIL;
           //break;
     }
@@ -141,7 +154,7 @@ bool MExpr()
         case RPAREN_TOK:
           break;
         default:
-          ParseError("Parse fail in MExpr");
+          ParseError("MExpr Parse Error");
           return LEAVE_FAIL;
           break;
     }
@@ -154,7 +167,7 @@ bool Term()
     ENTER;
     if(!Factor()) return LEAVE_FAIL;
     if(!MTerm()) return LEAVE_FAIL;
-    return MTerm();
+    return LEAVE_SUCC;
 }
 
 bool MTerm()
@@ -176,7 +189,7 @@ bool MTerm()
           //if(!MultOp()) return LEAVE_FAIL;
           break;
         default:
-          ParseError("Fail on MTerm");
+          ParseError("MTerm Parse Error");
           return LEAVE_FAIL;
           break;
     }
@@ -211,7 +224,7 @@ bool Factor()
           if(!Match(IDENT_TOK)) return LEAVE_FAIL;
           break;
         default:
-          ParseError("No option in switch");
+          ParseError("Factor Parse Error");
           return LEAVE_FAIL;
     }
     return LEAVE_SUCC;
@@ -230,7 +243,7 @@ bool AddOp()
           Match(PLUS_TOK);
           break;
         default:
-          ParseError("AddOp not recognized");
+          ParseError("AddOp Parse Error");
           return LEAVE_FAIL;
     }
     //if(Match(MINUS_TOK)) return LEAVE_SUCC;
@@ -251,7 +264,7 @@ bool MultOp()
           Match(DIV_TOK);
           break;
         default:
-          ParseError("MultOp not recognized");
+          ParseError("MultOp Parse Error");
           return LEAVE_FAIL;
     }
     //if(Match(TIMES_TOK)) return LEAVE_SUCC;

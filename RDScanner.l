@@ -1,3 +1,8 @@
+/* Author:      Quentin Goehrig
+   Created:     03/13.18
+   Resources:
+*/
+
 Letter	[A-Za-z]
 Digit   [0-9]
 
