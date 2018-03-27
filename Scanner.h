@@ -10,7 +10,8 @@
 
 extern int yylex();                   // The next token function.
 extern char *yytext;                  // The matched token text.
-extern unsigned long yyleng;          // The token text length.
+//extern unsigned long yyleng;          // The token text length.
+extern size_t yyleng;          // The token text length.
 
 
 #endif
