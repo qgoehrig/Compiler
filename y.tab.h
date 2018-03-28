@@ -49,7 +49,8 @@ extern int yydebug;
     CHR_TOK = 2,
     ASSIGN_TOK = 3,
     INTLIT_TOK = 4,
-    IDENT_TOK = 5
+    IDENT_TOK = 5,
+    LBRACE_TOK = 6
   };
 #endif
 /* Tokens.  */
@@ -58,6 +59,7 @@ extern int yydebug;
 #define ASSIGN_TOK 3
 #define INTLIT_TOK 4
 #define IDENT_TOK 5
+#define LBRACE_TOK 6
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED

@@ -9,7 +9,7 @@ Digit   [0-9]
     result = (c == EOF) ? YY_NULL : (buf[0] = c, 1); \
   }
 
-bool shouldLog = true;
+bool shouldLog = false;
 lineComment = true;
 int commLayers = 0;
 
@@ -34,7 +34,7 @@ int commentLevel = 0;
      -?{Digit}+\.{Digit}+			{ if (!IN_COMMENT) RETURN(FLOATLIT_TOK); }
    */
 
-int                             { if (!IN_COMMENT) RETURN(INT_TOK); }
+"int"                           { if (!IN_COMMENT) RETURN(INT_TOK); }
 \;                              { if (!IN_COMMENT) RETURN(';'); }
 "\/\/"							{ lineComment = true; }
 "/*"							{ commLayers++; }

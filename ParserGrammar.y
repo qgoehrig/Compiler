@@ -23,6 +23,7 @@ void yyerror(char *s);
 %token ASSIGN_TOK 3
 %token INTLIT_TOK 4
 %token IDENT_TOK 5
+%token LBRACE_TOK 6
 
 
 %%
@@ -32,10 +33,11 @@ StmtSeq :                                                                       
 Stmt    : Decl                                                                    ;
 Stmt    : Assign                                                                  ;
 Decl    : Type IDLst                                                              ;
-Type    : INT_TOK                                                                 ;
+Type    : INT_TOK                                     ;
 Type    : CHR_TOK                                                                 ;
 IDLst   : IDENT_TOK MLst                                                          ;
-MLst    : ',' IDLst                                                               ;
+MLst    : ',' IDLst
+MLst    :                                                               ;
 Assign  : LHS ASSIGN_TOK Expr                    { printf("%s =\n",(char *)$1); } ;
 LHS     : IDENT_TOK                               { $$ = (long) strdup(yytext); } ;
 Expr    : Term MExpr                                                              ;
