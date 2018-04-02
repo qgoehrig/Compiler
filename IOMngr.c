@@ -81,6 +81,9 @@ void CloseSource() {
     if( !finished ) {
         printLineAndMessages();
     }
+    else if(messageCnt > 0) {
+        printAndClearMessages();
+    }
     fclose( sourceFile );
 }
 
@@ -117,13 +120,14 @@ char GetSourceChar() {
 void PostMessage(int aColumn, int aLength, const char * aMessage) {
     int prevMsgEndCol = MAXLINE;
     if( messageCnt > 0) {
-        prevMsgEndCol = messages[messageCnt - 1].endColumn;
+       prevMsgEndCol = messages[messageCnt - 1].endColumn;
     }
     if( messageCnt == 0 || ((messageCnt < 26) && (prevMsgEndCol <= aColumn)) ){
         messages[messageCnt].startColumn = aColumn;
         messages[messageCnt].endColumn = aColumn + aLength;
         messages[messageCnt].message = strdup(aMessage);
         messageCnt++;
+        //printf("added msg\n");
     }
 }
 
