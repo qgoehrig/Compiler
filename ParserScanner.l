@@ -30,19 +30,20 @@ int commentLevel = 0;
      where token-symbolic-name appears in yacc file.
 
      Removed:
+     -?({Digit}|{Digit}+) -?{Digit}+
      float                           { if (!IN_COMMENT) RETURN(FLOAT_TOK); }
      -?{Digit}+\.{Digit}+			{ if (!IN_COMMENT) RETURN(FLOATLIT_TOK); }
    */
 
-"int"                           { if (!IN_COMMENT) RETURN(INT_TOK); }
+int                             { if (!IN_COMMENT) RETURN(INT_TOK); }
 \;                              { if (!IN_COMMENT) RETURN(';'); }
 "\/\/"							{ lineComment = true; }
 "/*"							{ commLayers++; }
 "*/"							{ commLayers--; }
 chr                				{ if (!IN_COMMENT) RETURN(CHR_TOK); }
 {Letter}({Letter}|{Digit})*		{ if (!IN_COMMENT) RETURN(IDENT_TOK); }
--?{Digit}+						{ if (!IN_COMMENT) RETURN(INTLIT_TOK); }
-:=							{ if (!IN_COMMENT) RETURN(ASSIGN_TOK); }
+-?({Digit}|{Digit}+)			{ if (!IN_COMMENT) RETURN(INTLIT_TOK); }
+:=							    { if (!IN_COMMENT) RETURN(ASSIGN_TOK); }
 "\("							{ if (!IN_COMMENT) RETURN('('); }
 "\)"							{ if (!IN_COMMENT) RETURN(')'); }
 "-"								{ if (!IN_COMMENT) RETURN('-'); }

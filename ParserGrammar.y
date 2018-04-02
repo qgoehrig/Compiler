@@ -27,33 +27,33 @@ void yyerror(char *s);
 
 
 %%
-Prog    : IDENT_TOK '{' StmtSeq '}'                                               ;
-StmtSeq : Stmt ';' StmtSeq                                                        ;
-StmtSeq :                                                                         ;
-Stmt    : Decl                                                                    ;
-Stmt    : Assign                                                                  ;
-Decl    : Type IDLst                                                              ;
-Type    : INT_TOK                                                                 ;
-Type    : CHR_TOK                                                                 ;
-IDLst   : IDENT_TOK MLst                                                          ;
-MLst    : ',' IDLst                                                               ;
-MLst    :                                                                         ;
-Assign  : LHS ASSIGN_TOK Expr                    { printf("%s =\n",(char *)$1); } ;
-LHS     : IDENT_TOK                               { $$ = (long) strdup(yytext); } ;
-Expr    : Term MExpr                                                              ;
-MExpr   : AddOp Term MExpr         { printf("MEXPR={%s %s}", (char *)$1, (char *)$2); };
-MExpr   :                           ;
-Term    : Factor MTerm              ;
-MTerm   : MultOp Factor MTerm       { printf("MTERM={%s %s}", (char *)$1, (char *)$2); }   ;
-MTerm   :                                                                         ;
-Factor  : '(' Expr ')'               { printf("FactorTEXT= {%s}", yytext);}                                             ;
-Factor  : '-' Factor                                                              ;
-Factor  : INTLIT_TOK                              { $$ = (long) strdup(yytext); } ;
-Factor  : IDENT_TOK                               { $$ = (long) strdup(yytext); } ;
-AddOp   : '-'                                     { $$ = (long) strdup(yytext); } ;
-AddOp   : '+'                                     { $$ = (long) strdup(yytext); } ;
-MultOp  : '*'                                     { $$ = (long) strdup(yytext); } ;
-MultOp  : '/'                                     { $$ = (long) strdup(yytext); } ;
+Prog    : IDENT_TOK '{' StmtSeq '}'                                                             ;
+StmtSeq : Stmt ';' StmtSeq                                                                      ;
+StmtSeq :                                                                                       ;
+Stmt    : Decl                                                                                  ;
+Stmt    : Assign                                                                                ;
+Decl    : Type IDLst                                                                            ;
+Type    : INT_TOK                                                                               ;
+Type    : CHR_TOK                                                                               ;
+IDLst   : IDENT_TOK MLst                                                                        ;
+MLst    : ',' IDLst                                                                             ;
+MLst    :                                                                                       ;
+Assign  : LHS ASSIGN_TOK Expr                                  { printf("%s =\n",(char *)$$); } ;
+LHS     : IDENT_TOK                                             { $$ = (long) strdup(yytext); } ;
+Expr    : Term MExpr                                                                            ;
+MExpr   : AddOp Term MExpr                                       { printf("%s ", (char *)$1); } ;
+MExpr   :                                                                                       ;
+Term    : Factor MTerm                                                                          ;
+MTerm   : MultOp Factor MTerm                                    { printf("%s ", (char *)$1); } ;
+MTerm   :                                                                                       ;
+Factor  : '(' Expr ')'                                                             { $$ = $2; } ;
+Factor  : '-' Factor                                                                            ;
+Factor  : INTLIT_TOK             { printf("%s ", (char *)yytext); $$ = (long) strdup(yytext); } ;
+Factor  : IDENT_TOK               { printf("%s ", (char *)yytext);$$ = (long) strdup(yytext); } ;
+AddOp   : '-'                                                   { $$ = (long) strdup(yytext); } ;
+AddOp   : '+'                                                   { $$ = (long) strdup(yytext); } ;
+MultOp  : '*'                                                   { $$ = (long) strdup(yytext); } ;
+MultOp  : '/'                                                   { $$ = (long) strdup(yytext); } ;
 
 %%
 
@@ -65,5 +65,5 @@ yyerror(char *s) {
  char msg[256];
  printf("\n");
  snprintf(msg,255,"error: \"%s\" yytext: \"%s\"",s,yytext);
- PostMessage(GetCurrentColumn(),yyleng,msg);
+ PostMessage(GetCurrentColumn() - 1,yyleng,msg);
 }
