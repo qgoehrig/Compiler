@@ -33,27 +33,27 @@ StmtSeq :                                                                       
 Stmt    : Decl                                                                    ;
 Stmt    : Assign                                                                  ;
 Decl    : Type IDLst                                                              ;
-Type    : INT_TOK                                     ;
+Type    : INT_TOK                                                                 ;
 Type    : CHR_TOK                                                                 ;
 IDLst   : IDENT_TOK MLst                                                          ;
-MLst    : ',' IDLst
-MLst    :                                                               ;
+MLst    : ',' IDLst                                                               ;
+MLst    :                                                                         ;
 Assign  : LHS ASSIGN_TOK Expr                    { printf("%s =\n",(char *)$1); } ;
 LHS     : IDENT_TOK                               { $$ = (long) strdup(yytext); } ;
 Expr    : Term MExpr                                                              ;
-MExpr   : AddOp Term MExpr                                                        ;
-MExpr   :                                                                         ;
-Term    : Factor MTerm                                                            ;
-MTerm   : MultOp Factor MTerm                                                     ;
+MExpr   : AddOp Term MExpr         { printf("MEXPR={%s %s}", (char *)$1, (char *)$2); };
+MExpr   :                           ;
+Term    : Factor MTerm              ;
+MTerm   : MultOp Factor MTerm       { printf("MTERM={%s %s}", (char *)$1, (char *)$2); }   ;
 MTerm   :                                                                         ;
-Factor  : '(' Expr ')'                                              ;
-Factor  : '-' Factor                                                        ;
-Factor  : INTLIT_TOK                                                              ;
-Factor  : IDENT_TOK                                                               ;
-AddOp   : '-'                                                              ;
-AddOp   : '+'                                                                ;
-MultOp  : '*'                                                               ;
-MultOp  : '/'                                ;
+Factor  : '(' Expr ')'               { printf("FactorTEXT= {%s}", yytext);}                                             ;
+Factor  : '-' Factor                                                              ;
+Factor  : INTLIT_TOK                              { $$ = (long) strdup(yytext); } ;
+Factor  : IDENT_TOK                               { $$ = (long) strdup(yytext); } ;
+AddOp   : '-'                                     { $$ = (long) strdup(yytext); } ;
+AddOp   : '+'                                     { $$ = (long) strdup(yytext); } ;
+MultOp  : '*'                                     { $$ = (long) strdup(yytext); } ;
+MultOp  : '/'                                     { $$ = (long) strdup(yytext); } ;
 
 %%
 

@@ -10,7 +10,7 @@ Digit   [0-9]
   }
 
 bool shouldLog = false;
-lineComment = true;
+bool lineComment = true;
 int commLayers = 0;
 
 #define RETURN(val) \
