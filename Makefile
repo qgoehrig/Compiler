@@ -8,6 +8,11 @@ LOADLIBES = -ll -ly
 YFLAGS = -d
 CFLAGS = -g  -std=gnu11
 
+# several projects use y.tab.h produced by yacc, to
+# avoid using wrong y.tab.h they must each build own,
+# this is used to force the application of a rule
+FORCE:
+
 #==========================
 # Make rule syntax
 # target: dependencies
@@ -123,8 +128,7 @@ rdtest5: 	RecDescent
 #===========================
 # Parser Stage 1 & 2
 ParserScanner.o: ParserScanner.l IOMngr.h ParserGrammar.o y.tab.h
-ParserGrammar.o: ParserGrammar.y
-y.tab.h: ParserGrammar.o
+ParserGrammar.o: FORCE ParserGrammar.y
 Parse.o: Parse.c Grammar.h Scanner.h IOMngr.h
 Parse: Parse.o ParserGrammar.o ParserScanner.o IOMngr.o
 
@@ -135,8 +139,43 @@ parse1:	Parse
 parse2:	Parse
 	./Parse ParSrc-2.src
 
+#===========================
+# Semantics
+CGTest.o:     CGTest.c YCodeGen.h
+CGTest:       CGTest.o YCodeGen.o
+
+YCodeGen.o:	YCodeGen.c YCodeGen.h
+
+YScanner.o: 		YScanner.l IOMngr.h YSemantics.h YGrammar.o
+YGrammar.o:			FORCE YGrammar.y
+YSemantics.o: 	YSemantics.c YSemantics.h
+Y.o: 						Y.c Grammar.h YScanner.l IOMngr.h
+Y:							Y.o SymTab.o IOMngr.o YGrammar.o YScanner.o YSemantics.o YCodeGen.o
+
+
+ytest:	y1test y2test y3test y4test y5test
+
+y1test: Y
+		./Y y1
+
+y2test: Y
+		./Y y2
+		spim -noexception -file y2.asm < y2.in
+
+y3test: Y
+		./Y y3
+		spim -noexception -file y3.asm < y3.in
+
+y4test: Y
+		./Y y4
+		spim -noexception -file y4.asm < y4.in
+
+y5test: Y
+		./Y yfactors
+		spim -noexception -file yfactors.asm < yfactors.in
+
 
 
 # Other
 clean:
-	rm -f *.o SymTabDriver IOMngrDriver ScannerDriver RecDescent Parse Y
+	rm -f *.o SymTabDriver IOMngrDriver ScannerDriver RecDescent Parse Y y.tab.h
