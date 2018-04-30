@@ -211,29 +211,23 @@ Finish() {
 
 void
 ProcDecls(struct IdList * idList, enum BaseTypes baseType) {
-  struct SymEntry * entry = idList->entry;
-  while( entry ) {
-    struct Attr * newAttr = malloc(sizeof (struct Attr));
-    struct TypeDesc * typeDesc = malloc(sizeof(struct TypeDesc));
-    const char * entryName = GetName(entry);
-    if( strcmp(entryName, "PrimType") == 0 ) {
-      typeDesc->declType = PrimType;
-      typeDesc->primDesc = baseType;
-    }
-    else if( strcmp(entryName, "FuncType") == 0 ) {
-      typeDesc->declType = FuncType;
-    }
-    else {
-      printf("ERROR - Invalid IdList Name");
-    }
-    int refLen = strlen(entryName) + 1;
-    char * refStr = malloc(refLen * sizeof(char));
-    strcpy(refStr, "_");
-    strcat(refStr, entryName);
-    newAttr->typeDesc = typeDesc;
-    newAttr->reference = refStr;
-    SetAttr(entry, 1, newAttr);
-    entry = idList->next;
+
+  while( idList ) {
+      struct SymEntry * entry = idList->entry;
+      struct Attr * curAttr = GetAttr(entry);
+      struct TypeDesc * typeDesc = curAttr->typeDesc;
+      enum DeclTypes type = typeDesc->declType;
+      if( type == PrimType ) {
+          typeDesc->primDesc = baseType;
+      }
+      else if( type == FuncType ) {
+          int dude = 69;
+      }
+      else {
+          int dude = 69;
+      }
+      SetAttr(entry, 1, curAttr);
+      idList = idList->next;
   }
   // walk IdList items
     // switch for prim or func type
@@ -246,23 +240,29 @@ ProcDecls(struct IdList * idList, enum BaseTypes baseType) {
 // Q: Adds name to end of list, unless we want to prepend here?
 struct IdList *
 AppendIdList(struct IdList * item, struct IdList * list) {
-    if(!list->entry) {
-        list->entry = list;
-    }
-    else {
-        struct IdList * listIndex = list;
-        while( listIndex->next ) {
-            listIndex = listIndex->next;
-        }
-        listIndex->next = item;
-    }
-    return list;
+    item->next = list;
+    return item;
 
 }
 
 struct IdList *
 ProcName(char * id, enum DeclTypes type) {
-
+    printf("Ayy we got a name\n");
+    struct SymEntry * entry = LookupName(IdentifierTable, id);
+    if(entry != NULL) {
+        printf("ProcName error, id exists\n");
+        return NULL;
+    }
+    entry = EnterName(IdentifierTable, id);
+    struct IdList * node = malloc(sizeof(struct IdList));
+    struct TypeDesc * desc = malloc(sizeof(struct TypeDesc));
+    desc->declType = type;
+    struct Attr * newAttr = malloc(sizeof(struct Attr));
+    newAttr->typeDesc = desc;
+    newAttr->reference = id; //underscore
+    SetAttr(entry, 1, newAttr);
+    node->entry = entry;
+    return node;
   // get entry for id, error if it exists
   // enter id in symtab
   // create IdList node for entry

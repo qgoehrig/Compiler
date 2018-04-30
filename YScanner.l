@@ -30,7 +30,9 @@ Digit   [0-9]
 "\/\/"							{ lineComment = true; }
 "/*"							{ commLayers++; }
 "*/"							{ commLayers--; }
-int                             { if (!IN_COMMENT) RETURN(INT_TOK); }
+","                             { if (!IN_COMMENT) RETURN (','); }
+":"                             { if (!IN_COMMENT) RETURN (':'); }
+"int"                          { if (!IN_COMMENT) RETURN(INT_TOK); }
 chr                				{ if (!IN_COMMENT) RETURN(CHR_TOK); }
 decl                            { if (!IN_COMMENT) RETURN(DECL_TOK); }
 impl                            { if (!IN_COMMENT) RETURN(IMPL_TOK); }
