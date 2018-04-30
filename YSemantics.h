@@ -3,7 +3,6 @@
  */
 
 #include "SymTab.h"
-//#include "SymTab.c"
 #include "IOMngr.h"
 #include "Scanner.h"
 #include "YCodeGen.h"

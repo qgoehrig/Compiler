@@ -211,22 +211,29 @@ Finish() {
 
 void
 ProcDecls(struct IdList * idList, enum BaseTypes baseType) {
-  struct SymEntry * item = idList->entry;
-  while( item ) {
-    // struct Attr * newAttr = GetAttr(item)
-    // struct TypeDesc * typeDesc = malloc(sizeof(struct TypeDesc));
-    char * itemName = GetName(item);
-    if( strcmp(itemName, "PrimType") == 0 ) {
+  struct SymEntry * entry = idList->entry;
+  while( entry ) {
+    struct Attr * newAttr = malloc(sizeof (struct Attr));
+    struct TypeDesc * typeDesc = malloc(sizeof(struct TypeDesc));
+    const char * entryName = GetName(entry);
+    if( strcmp(entryName, "PrimType") == 0 ) {
       typeDesc->declType = PrimType;
       typeDesc->primDesc = baseType;
     }
-    else if( strcmp(item->name, "PrimType") == 0 ) {
+    else if( strcmp(entryName, "FuncType") == 0 ) {
       typeDesc->declType = FuncType;
     }
     else {
       printf("ERROR - Invalid IdList Name");
     }
-    item = item->next;
+    int refLen = strlen(entryName) + 1;
+    char * refStr = malloc(refLen * sizeof(char));
+    strcpy(refStr, "_");
+    strcat(refStr, entryName);
+    newAttr->typeDesc = typeDesc;
+    newAttr->reference = refStr;
+    SetAttr(entry, 1, newAttr);
+    entry = idList->next;
   }
   // walk IdList items
     // switch for prim or func type
@@ -255,6 +262,7 @@ AppendIdList(struct IdList * item, struct IdList * list) {
 
 struct IdList *
 ProcName(char * id, enum DeclTypes type) {
+
   // get entry for id, error if it exists
   // enter id in symtab
   // create IdList node for entry

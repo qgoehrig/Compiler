@@ -18,12 +18,12 @@ void yyerror(char *s);
 // These token definitions populate y.tab.h
 // Single character tokens are their own token numbers (e.g. scanner returns
 // the value ';' for the semicolon token)
-%token INT_TOK 1
-%token CHR_TOK 2
-%token ASSIGN_TOK 3
-%token INTLIT_TOK 4
-%token IDENT_TOK 5
-%token LBRACE_TOK 6
+//%token INT_TOK 1
+//%token CHR_TOK 2
+//%token ASSIGN_TOK 3
+//%token INTLIT_TOK 4
+//%token IDENT_TOK 5
+//%token LBRACE_TOK 6
 
 
 %%
@@ -35,8 +35,8 @@ Stmt    : Assign                                                                
 Decl    : Type IDLst                                                                            ;
 Type    : INT_TOK                                                                               ;
 Type    : CHR_TOK                                                                               ;
-IDLst   : IDENT_TOK MLst                                                                        ;
-MLst    : ',' IDLst                                                                             ;
+IDLst   : IDENT_TOK MLst                                       { $$ = $1; }                     ;
+MLst    : ',' IDLst                                            { $$ = $2; }                     ;
 MLst    :                                                                                       ;
 Assign  : LHS ASSIGN_TOK Expr                                  { printf("%s =\n",(char *)$$); } ;
 LHS     : IDENT_TOK                                             { $$ = (long) strdup(yytext); } ;
