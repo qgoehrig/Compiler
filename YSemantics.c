@@ -149,7 +149,7 @@ void processGlobalIdentifier(struct SymEntry * entry, int cnt, void * dataCode) 
   struct Attr * attr = GetAttr(entry);
   switch (attr->typeDesc->declType) {
     case PrimType: {
-
+      AppendSeq(dataCode,GenInstr(attr->reference,".word","0",NULL,NULL));
     } break;
     case FuncType: {
       // nothing to do here
@@ -165,7 +165,7 @@ void processFunctions(struct SymEntry * entry, int cnt, void * textCode) {
     } break;
     case FuncType: {
       if (!attr->typeDesc->funcDesc->funcCode) {
-        PostMessageAndExit(GetCurrentColumn(),"function never implemented");
+        AppendSeq(textCode,GenInstr(attr->reference,".word","0",NULL,NULL));
       }
 
     } break;
@@ -196,8 +196,8 @@ Finish() {
   AppendSeq(textCode,GenInstr(NULL,"li","$v0","10",NULL));
   AppendSeq(textCode,GenInstr(NULL,"syscall",NULL,NULL,NULL));
 
-  InvokeOnEntries(IdentifierTable,true,processGlobalIdentifier,0,textCode);
-  InvokeOnEntries(IdentifierTable,true,processFunctions,0,dataCode);
+  InvokeOnEntries(IdentifierTable,true,processGlobalIdentifier,0,dataCode);
+  InvokeOnEntries(IdentifierTable,true,processFunctions,0,textCode);
 
 
   // run SymTab with InvokeOnEntries putting globals in data seg
@@ -247,7 +247,6 @@ AppendIdList(struct IdList * item, struct IdList * list) {
 
 struct IdList *
 ProcName(char * id, enum DeclTypes type) {
-    printf("Ayy we got a name\n");
     struct SymEntry * entry = LookupName(IdentifierTable, id);
     if(entry != NULL) {
         printf("ProcName error, id exists\n");
