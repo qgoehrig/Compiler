@@ -196,6 +196,10 @@ Finish() {
   AppendSeq(textCode,GenInstr(NULL,"li","$v0","10",NULL));
   AppendSeq(textCode,GenInstr(NULL,"syscall",NULL,NULL,NULL));
 
+  InvokeOnEntries(IdentifierTable,true,processGlobalIdentifier,0,textCode);
+  InvokeOnEntries(IdentifierTable,true,processFunctions,0,dataCode);
+
+
   // run SymTab with InvokeOnEntries putting globals in data seg
   // run SymTab with InvokeOnEntries putting functions in code seq
 
@@ -221,12 +225,9 @@ ProcDecls(struct IdList * idList, enum BaseTypes baseType) {
           typeDesc->primDesc = baseType;
       }
       else if( type == FuncType ) {
-          int dude = 69;
+          typeDesc-> funcDesc = malloc(sizeof(struct FuncDesc));
       }
-      else {
-          int dude = 69;
-      }
-      SetAttr(entry, 1, curAttr);
+      SetAttr(entry, STRUCT_KIND, curAttr);
       idList = idList->next;
   }
   // walk IdList items
@@ -242,7 +243,6 @@ struct IdList *
 AppendIdList(struct IdList * item, struct IdList * list) {
     item->next = list;
     return item;
-
 }
 
 struct IdList *
@@ -259,8 +259,11 @@ ProcName(char * id, enum DeclTypes type) {
     desc->declType = type;
     struct Attr * newAttr = malloc(sizeof(struct Attr));
     newAttr->typeDesc = desc;
-    newAttr->reference = id; //underscore
-    SetAttr(entry, 1, newAttr);
+    char * ref = malloc((strlen(id) + 1) * sizeof(char));
+    strcpy(ref, "_");
+    strcat(ref, id);
+    newAttr->reference = ref;
+    SetAttr(entry, STRUCT_KIND, newAttr);
     node->entry = entry;
     return node;
   // get entry for id, error if it exists
@@ -272,6 +275,13 @@ ProcName(char * id, enum DeclTypes type) {
 
 void
 ProcFunc(char * id, struct InstrSeq * instrs) {
+  struct SymEntry * entry = LookupName(IdentifierTable, id);
+  struct Attr * attr = GetAttr(entry);
+  struct InstrSeq * seq = GenInstr(attr->reference, NULL, NULL, NULL, NULL);
+  AppendSeq(seq, instrs);
+  struct InstrSeq * ret = GenInstr(NULL, NULL, NULL, NULL, NULL);
+  AppendSeq(seq, ret);
+
   // lookup name
   // get attr
   // gen instr for function entry

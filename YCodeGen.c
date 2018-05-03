@@ -42,7 +42,7 @@ InitCodeGen(char *AFilename) {
   strcpy(AssmFilename,AFilename);
   AssmFile = fopen(AssmFilename,"w");
   //AssmFile = stdout;
-  
+
   NextLabel = 1;
 }
 
@@ -56,7 +56,7 @@ CopyStr(char * AStr) {
   return (AStr) ? strdup(AStr) : NULL;
 }
 
-struct InstrSeq * 	  
+struct InstrSeq *
 GenInstr(char *Label, char *OpCode, char *Oprnd1, char *Oprnd2, char *Oprnd3) {
   struct InstrSeqNode * node = malloc(sizeof(struct InstrSeqNode));
   node->Label = CopyStr(Label);
@@ -64,34 +64,34 @@ GenInstr(char *Label, char *OpCode, char *Oprnd1, char *Oprnd2, char *Oprnd3) {
   node->Oprnd1 = CopyStr(Oprnd1);
   node->Oprnd2 = CopyStr(Oprnd2);
   node->Oprnd3 = CopyStr(Oprnd3);
-	node->next = NULL;
-	
+  node->next = NULL;
+
   struct InstrSeq * seq = malloc(sizeof(struct InstrSeq));
   seq->head = node;
   seq->tail = node;
-  
+
   return seq;
 }
-	
-extern struct InstrSeq * 
+
+extern struct InstrSeq *
 AppendSeq(struct InstrSeq * seq1, struct InstrSeq * seq2) {
   if (!seq1 && seq2) return seq2;
   if (!seq2 && seq1) return seq1;
   if (!seq1 && !seq2) return NULL;
-  
+
   seq1->tail->next = seq2->head;
   seq1->tail = seq2->tail;
   free(seq2);
-  
+
   return seq1;
 }
 
 void
 FreeSeq(struct InstrSeq * seq) {
-  
+
 }
 
-void	  
+void
 WriteSeq(struct InstrSeq *ASeq) {
   struct InstrSeqNode * node = ASeq->head;
   while (node) {
@@ -112,7 +112,7 @@ char *
 GenLabel(){
   char *label = (char *) malloc(8);
   sprintf(label,"L%d",NextLabel++);
-  
+
   return label;
 }
 
@@ -127,7 +127,7 @@ AvailTmpReg() {
       return i;
     }
   }
-  
+
   return -1;
 }
 
@@ -135,7 +135,7 @@ char *
 TmpRegName(int RegNum) {
   if ((RegNum >= 0) && ( RegNum < MAX_REG)) {
     return Registers[RegNum].name;
-  } 
+  }
   else {
     return NULL;
   }
@@ -145,7 +145,7 @@ void
 ReleaseTmpReg(int ANum) {
   if ((ANum >= 0) && ( ANum < MAX_REG)) {
     Registers[ANum].free = true;
-  } 
+  }
   return;
 }
 
@@ -185,7 +185,7 @@ TmpRegName(int RegNum) {
 
 void
 ReleaseTmpReg(int ANum) {
-  
+
 }
 
 void
@@ -233,7 +233,7 @@ CalleeProlog() {
   // and consequently the frame size, prior to completing the func code
   AppendSeq(saveSeq,GenInstr(NULL,"sw","$s7",RegOff(cnt*4,"$sp"),NULL));
   cnt++;
-  
+
   for (int i = 0; i < MAX_REG; i++) {
     if (Registers[i].hasBeenUsed) {
       AppendSeq(saveSeq,GenInstr(NULL,"sw",TmpRegName(i),RegOff(cnt*4,"$sp"),NULL));
@@ -243,11 +243,11 @@ CalleeProlog() {
   saveSeq = AppendSeq(GenInstr(NULL,"addiu","$sp","$sp",Imm(-cnt*4)),saveSeq);
   AppendSeq(saveSeq,GenInstr(NULL,"addiu","$fp","$sp",Imm((cnt-1)*4)));
   AppendSeq(saveSeq,GenInstr(NULL,"addiu","$s7","$sp",Imm(-4)));
-  
+
   return saveSeq;
 }
 
-struct InstrSeq * 
+struct InstrSeq *
 CalleeEpilog() {
   int cnt = 0;
   struct InstrSeq * restoreSeq = GenInstr(NULL,"lw","$ra",RegOff(cnt*4,"$sp"),NULL);
@@ -256,7 +256,7 @@ CalleeEpilog() {
   cnt++;
   AppendSeq(restoreSeq,GenInstr(NULL,"lw","$s7",RegOff(cnt*4,"$sp"),NULL));
   cnt++;
-  
+
   for (int i = 0; i < MAX_REG; i++) {
     if (Registers[i].hasBeenUsed) {
       AppendSeq(restoreSeq,GenInstr(NULL,"lw",TmpRegName(i),RegOff(cnt*4,"$sp"),NULL));
@@ -264,8 +264,6 @@ CalleeEpilog() {
     }
   }
   AppendSeq(restoreSeq,GenInstr(NULL,"addiu","$sp","$sp",Imm(cnt*4)));
-  
+
   return restoreSeq;
 }
-
-
