@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "Scanner.h"
 #include "IOMngr.h"

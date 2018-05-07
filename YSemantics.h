@@ -38,6 +38,7 @@ struct Attr {
 
 struct ExprResult {
     struct InstrSeq * exprCode;
+    int exprType;
     int registerNum;
 }
 

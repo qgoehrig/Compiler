@@ -33,7 +33,9 @@ Digit   [0-9]
 ","                             { if (!IN_COMMENT) RETURN (','); }
 ":"                             { if (!IN_COMMENT) RETURN (':'); }
 "="                             { if (!IN_COMMENT) RETURN ('='); }
-"Get("                          { if (!IN_COMMENT) RETURN ('GET_TOK'); }
+"get("                          { if (!IN_COMMENT) RETURN ('GET_TOK'); }
+"put("                          { if (!IN_COMMENT) RETURN ('PUT_TOK'); }
+'([^'\\\n]|\\.)'                { if (!IN_COMMENT) RETURN ( 'CHRLIT_TOK')}
 "int"                           { if (!IN_COMMENT) RETURN(INT_TOK); }
 "chr"                		    { if (!IN_COMMENT) RETURN(CHR_TOK); }
 "decl"                          { if (!IN_COMMENT) RETURN(DECL_TOK); }

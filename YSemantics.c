@@ -165,9 +165,11 @@ void processFunctions(struct SymEntry * entry, int cnt, void * textCode) {
     } break;
     case FuncType: {
       if (!attr->typeDesc->funcDesc->funcCode) {
-        AppendSeq(textCode,GenInstr(attr->reference,".word","0",NULL,NULL));
+        PostMessageAndExit(GetCurrentColumn(),"function never implemented");
       }
-
+      else {
+        AppendSeq(textCode, attr->typeDesc->funcDesc->funcCode);
+      }
     } break;
   }
 }
@@ -286,18 +288,27 @@ ProcFunc(char * id, struct InstrSeq * instrs) {
   // function exit code, i.e. jump return
 }
 
-void
-PrintVal(char * val) {
-    GenInstr(t0, ) // load to tmp reg some value
+struct InstrSeq *
+Put(char * val) {
+    int t0 = AvailTempReg();
+    char t0Txt = TmpRegName(t0);
+    struct InstrSeq * start = GenInstr( NULL, "li", t0Txt, val, NULL );
+    AppendSeq( start, GenInstr( NULL, "li", "$v0", "11", NULL ));
+    AppendSeq( start, GenInstr( NULL, "move", "$a0", t0Txt, NULL ));
+    AppendSeq( start, GenInstr( NULL, "syscall", NULL, NULL, NULL );
+    //ReleaseTmpReg
+    return start;
 }
-
 
 // Returns input from std in
 void
 Get(char * primaryType) {
+    int t0 = AvailTempReg();
+    char t0Txt = TmpRegName(t0);
     switch(primaryType) {
+        // get int from std in
         case "int": {
-            GenInstr()
+            //GenInstr()
         }
     }
 }
@@ -307,7 +318,7 @@ Get(char * primaryType) {
 void
 GetImmInt(int val) {
     char * regName = Imm(val);
-
+    GenInstr(NULL, "$v0", NULL,  )
 }
 
 void
@@ -324,11 +335,7 @@ ProcAddOp(struct ExprResult * term1, char op, struct ExprResult * term2) {
         struct ExprResultGenInstr()
     }
     else if( op == '-' ) {
-        GenInstr()
+        //GenInstr()
     }
-    GenInstr()
-}
-
-
-
+    //GenInstr()
 }

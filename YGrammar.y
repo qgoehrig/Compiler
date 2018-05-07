@@ -44,7 +44,9 @@
 %token INT_TOK   	4
 %token CHR_TOK   	5
 %token INTLIT_TOK   6
-%token GET_TOK      7
+%token CHRLIT_TOK   7
+%token GET_TOK      8
+%token PUT_TOK      9
 // can't go past 32 without conflicting with single char tokens
 // could use larger token numbers
 
@@ -78,18 +80,19 @@ FuncStmts     : Stmt ';' FuncStmts                              {  };
 FuncStmts     :                                                 {  };
 
 Stmt          : AssignStmt                                      {  };
+Stmt          : PUT_TOK CHRLIT_TOK ')'                          {  };
 
 AssignStmt    : Id '=' Expr                                     { ProcAssign($1, $3) };
 AssignStmt    :                                                 {  };
 
 Expr    :  Term                                             { $$ = $1; } ;
-Expr    :  Expr AddOp Term                                  { $$ = ProcAddOp($2, $3); } ;
+Expr    :  Expr AddOp Term                                  { $$ = ProcAddOp($2, $3); };
 
-Term    :  Term MultOp Factor                               { };
+Term    :  Term MultOp Factor                               { $$ = ProcMultOp($2, $3); };
 Term    :  Factor                                           { $$ = $1; } ;
-Factor  :  '(' Expr ')'                                     { $$ = $2; } ;
-Factor  :  '-' Factor                                       { $$ = - $2; } ;
-Factor  :  INTLIT_TOK                                       { $$ =  GetImmInt(atoi(yytext)) } ;
+Factor  :  '(' Expr ')'                               { $$ = $2; } ;
+Factor  :  '-' Factor                                 { $$ = - $2; } ;
+Factor  :  INTLIT_TOK                                 { $$ =  GetImmInt(atoi(yytext)) } ;
 Factor  :  GET_TOK Id ')'                             { $$ = Get(Id); } ;
 
 AddOp   : '+'               { $$ = strdup(yytext); }
