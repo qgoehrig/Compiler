@@ -36,6 +36,11 @@ struct Attr {
   char * reference;
 };
 
+struct ExprResult {
+    struct InstrSeq * exprCode;
+    int registerNum;
+}
+
 // Supporting Routines
 
 void InitSemantics();

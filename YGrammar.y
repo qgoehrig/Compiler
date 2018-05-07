@@ -17,6 +17,7 @@
   struct IdList * IdList;
   enum BaseTypes BaseType;
   struct InstrSeq * InstrSeq;
+  struct ExprResult * ExprResult;
 }
 
 /* Type declaration for data attached to non-terminals. Allows     */
@@ -31,6 +32,9 @@
 %type <InstrSeq> FuncStmts
 %type <InstrSeq> Stmt
 %type <InstrSeq> AssignStmt
+%type <ExprResult> Expr
+%type <ExprResult> Term
+%type <ExprResult> Factor
 
 /* List of token name and corresponding numbers */
 /* y.tab.h will be generated from these */
@@ -39,7 +43,8 @@
 %token IMPL_TOK   	3
 %token INT_TOK   	4
 %token CHR_TOK   	5
-%token INTLIT_TOK
+%token INTLIT_TOK   6
+%token GET_TOK      7
 // can't go past 32 without conflicting with single char tokens
 // could use larger token numbers
 
@@ -74,18 +79,24 @@ FuncStmts     :                                                 {  };
 
 Stmt          : AssignStmt                                      {  };
 
-AssignStmt    : Id '=' Expr                                     {  };
+AssignStmt    : Id '=' Expr                                     { ProcAssign($1, $3) };
 AssignStmt    :                                                 {  };
 
-Expr          :  Term '+' Expr                                    { $$ = $1 + $3; } ;
-Expr          :  Term '-' Expr                                    { $$ = $1 - $3; } ;
 Expr    :  Term                                             { $$ = $1; } ;
-Term    :  Factor '*' Term                                  { $$ = $1 * $3; } ;
-Term    :  Factor '/' Term                                  { $$ = $1 / $3; } ;
+Expr    :  Expr AddOp Term                                  { $$ = ProcAddOp($2, $3); } ;
+
+Term    :  Term MultOp Factor                               { };
 Term    :  Factor                                           { $$ = $1; } ;
 Factor  :  '(' Expr ')'                                     { $$ = $2; } ;
 Factor  :  '-' Factor                                       { $$ = - $2; } ;
-Factor  :  INTLIT_TOK                                       { $$ = atoi(yytext); } ;
+Factor  :  INTLIT_TOK                                       { $$ =  GetImmInt(atoi(yytext)) } ;
+Factor  :  GET_TOK Id ')'                             { $$ = Get(Id); } ;
+
+AddOp   : '+'               { $$ = strdup(yytext); }
+AddOp   : '-'               { $$ = strdup(yytext); }
+MultOp  : '*'               { $$ = strdup(yytext); }
+MultOp  : '/'               { $$ = strdup(yytext); }
+
 
 %%
 

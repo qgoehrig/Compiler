@@ -33,10 +33,11 @@ Digit   [0-9]
 ","                             { if (!IN_COMMENT) RETURN (','); }
 ":"                             { if (!IN_COMMENT) RETURN (':'); }
 "="                             { if (!IN_COMMENT) RETURN ('='); }
+"Get("                          { if (!IN_COMMENT) RETURN ('GET_TOK'); }
 "int"                           { if (!IN_COMMENT) RETURN(INT_TOK); }
-chr                				{ if (!IN_COMMENT) RETURN(CHR_TOK); }
-decl                            { if (!IN_COMMENT) RETURN(DECL_TOK); }
-impl                            { if (!IN_COMMENT) RETURN(IMPL_TOK); }
+"chr"                		    { if (!IN_COMMENT) RETURN(CHR_TOK); }
+"decl"                          { if (!IN_COMMENT) RETURN(DECL_TOK); }
+"impl"                          { if (!IN_COMMENT) RETURN(IMPL_TOK); }
 {Letter}({Letter}|{Digit})*		{ if (!IN_COMMENT) RETURN(IDENT_TOK); }
 {Digit}|{Digit}+			    { if (!IN_COMMENT) RETURN(INT_TOK); }
 "{"                             { if (!IN_COMMENT) RETURN('{'); }

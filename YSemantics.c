@@ -199,7 +199,6 @@ Finish() {
   InvokeOnEntries(IdentifierTable,true,processGlobalIdentifier,0,dataCode);
   InvokeOnEntries(IdentifierTable,true,processFunctions,0,textCode);
 
-
   // run SymTab with InvokeOnEntries putting globals in data seg
   // run SymTab with InvokeOnEntries putting functions in code seq
 
@@ -278,12 +277,58 @@ ProcFunc(char * id, struct InstrSeq * instrs) {
   struct Attr * attr = GetAttr(entry);
   struct InstrSeq * seq = GenInstr(attr->reference, NULL, NULL, NULL, NULL);
   AppendSeq(seq, instrs);
-  struct InstrSeq * ret = GenInstr(NULL, NULL, NULL, NULL, NULL);
+  struct InstrSeq * ret = GenInstr(NULL, "jr", NULL, NULL, NULL);
   AppendSeq(seq, ret);
-
   // lookup name
   // get attr
   // gen instr for function entry
   // include function body code
   // function exit code, i.e. jump return
+}
+
+void
+PrintVal(char * val) {
+    GenInstr(t0, ) // load to tmp reg some value
+}
+
+
+// Returns input from std in
+void
+Get(char * primaryType) {
+    switch(primaryType) {
+        case "int": {
+            GenInstr()
+        }
+    }
+}
+// instr seq?
+
+// Gets the temp register for an imm value
+void
+GetImmInt(int val) {
+    char * regName = Imm(val);
+
+}
+
+void
+ProcAssign(char * id,  struct * ExprResult) {
+    // put
+
+}
+
+struct ExprResult *
+ProcAddOp(struct ExprResult * term1, char op, struct ExprResult * term2) {
+    int tmpReg = AvailTmpReg();
+    char * tmpRegName = TmpRegName(tmpReg);
+    if ( op == '+' ) {
+        struct ExprResultGenInstr()
+    }
+    else if( op == '-' ) {
+        GenInstr()
+    }
+    GenInstr()
+}
+
+
+
 }
