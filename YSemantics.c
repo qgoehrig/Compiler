@@ -457,19 +457,19 @@ EvalExpr(struct ExprResult * expr1, enum Operators op, struct ExprResult * expr2
     char * regRight = TmpRegName(expr2->registerNum);
     struct InstrSeq * newSeq;
     switch( op ) {
-        case ADD: {
+        case Add: {
             newSeq = GenInstr(NULL, "add", t0Txt, regLeft, regRight);
             break;
         }
-        case SUB: {
+        case Sub: {
             newSeq = GenInstr(NULL, "sub", t0Txt, regLeft, regRight);
             break;
         }
-        case MUL: {
+        case Mul: {
             newSeq = GenInstr(NULL, "mul", t0Txt, regLeft, regRight);
             break;
         }
-        case DIV: {
+        case Div: {
             newSeq = GenInstr(NULL, "div", t0Txt, regLeft, regRight);
             break;
         }

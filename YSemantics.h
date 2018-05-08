@@ -37,12 +37,20 @@ struct Attr {
 };
 
 // Operators and Expressions
-enum Operators { ADD, SUB, MUL, DIV };
+enum Operators { Add, Sub, Mul, Div };
 
 struct ExprResult {
     struct InstrSeq * instrs;
     int exprType;
     int registerNum;
+};
+
+// Conditionals and Branching
+enum CondOps { NotEql, Eql, Less, Grtr, LessEql, GrtrEql };
+
+struct CondResult {
+    struct InstrSeq * instrs;
+    char * label;
 };
 
 // Supporting Routines
@@ -57,13 +65,16 @@ struct TypeDesc * MakeFuncDesc(enum BaseTypes returnType);
 void                    Finish();
 
 void                    ProcDecls(struct IdList * idList, enum BaseTypes baseType);
+void                    ProcFunc(char * id, struct InstrSeq * instrs);
 struct IdList *         AppendIdList(struct IdList * item, struct IdList * list);
 struct IdList *         ProcName(char * id, enum DeclTypes type);
-void                    ProcFunc(char * id, struct InstrSeq * instrs);
+struct InstrSeq *       ProcIf(struct CondResult * condResult, struct InstrSeq * thenBody, struct InstrSeq * elseBody);
 struct InstrSeq *       ProcAssign(char * id, struct ExprResult * exprResult);
 struct InstrSeq *       PutChrLit(char * val);
 struct InstrSeq *       PutVar(char * id);
 struct ExprResult *     Get(enum BaseTypes baseType);
 struct ExprResult *     GetImmInt(char * textVal);
 struct ExprResult *     GetVarExpr(char * ud);
-struct ExprResult *     EvalExpr(struct ExprResult * expr1, enum Operators op, struct ExprResult * expr2 );
+struct ExprResult *     EvalExpr(struct ExprResult * expr1, enum Operators op, struct ExprResult * expr2);
+struct CondResult *     EvalCond(struct ExprResult * expr1, enum CondOps condOp, struct ExprResult * expr2);
+struct InstrSeq *       ProcWhile(struct CondResult * condResult, struct InstrSeq * body );
