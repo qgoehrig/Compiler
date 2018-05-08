@@ -20,8 +20,8 @@ struct FuncDesc {
   struct InstrSeq * funcCode;
 };
 
-
 enum DeclTypes { PrimType, FuncType };
+
 struct TypeDesc {
   enum DeclTypes declType;
   union {
@@ -36,11 +36,14 @@ struct Attr {
   char * reference;
 };
 
+// Operators and Expressions
+enum Operators { ADD, SUB, MUL, DIV };
+
 struct ExprResult {
-    struct InstrSeq * exprCode;
+    struct InstrSeq * instrs;
     int exprType;
     int registerNum;
-}
+};
 
 // Supporting Routines
 
@@ -57,3 +60,8 @@ void                    ProcDecls(struct IdList * idList, enum BaseTypes baseTyp
 struct IdList *         AppendIdList(struct IdList * item, struct IdList * list);
 struct IdList *         ProcName(char * id, enum DeclTypes type);
 void                    ProcFunc(char * id, struct InstrSeq * instrs);
+struct InstrSeq *       ProcAssign(char * id, struct ExprResult * exprResult);
+struct InstrSeq *       Put(char * val);
+struct ExprResult *     Get(enum BaseTypes baseType);
+struct ExprResult *     GetImmInt(char * textVal);
+struct ExprResult *     EvalExpr(struct ExprResult * expr1, enum Operators op, struct ExprResult * expr2 );

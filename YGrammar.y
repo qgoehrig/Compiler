@@ -16,6 +16,7 @@
   char * Text;
   struct IdList * IdList;
   enum BaseTypes BaseType;
+  enum Operators Operator;
   struct InstrSeq * InstrSeq;
   struct ExprResult * ExprResult;
 }
@@ -28,13 +29,16 @@
 %type <IdList> DeclItem
 %type <InstrSeq> DeclImpls
 %type <BaseType> Type
+%type <InstrSeq> AssignStmt
+%type <InstrSeq> PutStmt
 %type <InstrSeq> FuncBody
 %type <InstrSeq> FuncStmts
 %type <InstrSeq> Stmt
-%type <InstrSeq> AssignStmt
 %type <ExprResult> Expr
 %type <ExprResult> Term
 %type <ExprResult> Factor
+%type <Text> ChrLit
+%type <Operator> Operator
 
 /* List of token name and corresponding numbers */
 /* y.tab.h will be generated from these */
@@ -76,30 +80,31 @@ Impl          : IMPL_TOK Id FuncArgNames FuncBody ';'           { ProcFunc($2,$4
 FuncArgNames  : '(' ')'                                         {  };
 FuncBody      : '{' FuncStmts '}'                               {  };
 
-FuncStmts     : Stmt ';' FuncStmts                              {  };
+FuncStmts     : Stmt ';' FuncStmts                              { $$ = AppendSeq($1, $3); };
 FuncStmts     :                                                 {  };
 
-Stmt          : AssignStmt                                      {  };
-Stmt          : PUT_TOK CHRLIT_TOK ')'                          {  };
+Stmt          : AssignStmt                                      { $$ = $1; };
+Stmt          : PutStmt                                         { $$ = $1; }
+Stmt          :                                                 { };
 
-AssignStmt    : Id '=' Expr                                     { ProcAssign($1, $3) };
-AssignStmt    :                                                 {  };
+PutStmt       : PUT_TOK ChrLit ')'                          { $$ = Put($2); };
+AssignStmt    : Id '=' Expr                                 { $$ = ProcAssign($1, $3); };
 
 Expr    :  Term                                             { $$ = $1; } ;
-Expr    :  Expr AddOp Term                                  { $$ = ProcAddOp($2, $3); };
+Expr    :  Expr Operator Term                               { $$ = EvalExpr($1, $2, $3); };
 
-Term    :  Term MultOp Factor                               { $$ = ProcMultOp($2, $3); };
-Term    :  Factor                                           { $$ = $1; } ;
-Factor  :  '(' Expr ')'                               { $$ = $2; } ;
-Factor  :  '-' Factor                                 { $$ = - $2; } ;
-Factor  :  INTLIT_TOK                                 { $$ =  GetImmInt(atoi(yytext)) } ;
-Factor  :  GET_TOK Id ')'                             { $$ = Get(Id); } ;
+Term    :  Term Operator Factor                             { $$ = EvalExpr($1, $2, $3); };
+Term    :  Factor                                           { $$ = $1; };
 
-AddOp   : '+'               { $$ = strdup(yytext); }
-AddOp   : '-'               { $$ = strdup(yytext); }
-MultOp  : '*'               { $$ = strdup(yytext); }
-MultOp  : '/'               { $$ = strdup(yytext); }
+ChrLit  : CHRLIT_TOK                                        { $$ = strdup(yytext); }
+Factor  :  '(' Expr ')'                                     { $$ = $2; } ;
+Factor  :  INTLIT_TOK                                       { $$ = GetImmInt(yytext); };
+Factor  :  GET_TOK Type ')'                                   { $$ = Get($2); };
 
+Operator  : '+'                                               { $$ = ADD; }
+Operator  : '-'                                               { $$ = SUB; }
+Operator  : '*'                                               { $$ = MUL; }
+Operator  : '/'                                               { $$ = DIV; }
 
 %%
 

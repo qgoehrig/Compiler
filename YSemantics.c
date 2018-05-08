@@ -200,9 +200,13 @@ Finish() {
 
   InvokeOnEntries(IdentifierTable,true,processGlobalIdentifier,0,dataCode);
   InvokeOnEntries(IdentifierTable,true,processFunctions,0,textCode);
-
   // run SymTab with InvokeOnEntries putting globals in data seg
   // run SymTab with InvokeOnEntries putting functions in code seq
+
+  // Operator   : '+'                                               { $$ = ADD; }
+  // Operator   : '-'                                               { $$ = SUB; }
+  // Operator  : '*'                                               { $$ = MUL; }
+  // Operator  : '/'                                               { $$ = DIV; }
 
   // combine and write
   struct InstrSeq * moduleCode = AppendSeq(textCode,dataCode);
@@ -288,54 +292,129 @@ ProcFunc(char * id, struct InstrSeq * instrs) {
   // function exit code, i.e. jump return
 }
 
+// Print something
 struct InstrSeq *
 Put(char * val) {
-    int t0 = AvailTempReg();
-    char t0Txt = TmpRegName(t0);
+    int t0 = AvailTmpReg();
+    char * t0Txt = TmpRegName(t0);
     struct InstrSeq * start = GenInstr( NULL, "li", t0Txt, val, NULL );
     AppendSeq( start, GenInstr( NULL, "li", "$v0", "11", NULL ));
     AppendSeq( start, GenInstr( NULL, "move", "$a0", t0Txt, NULL ));
-    AppendSeq( start, GenInstr( NULL, "syscall", NULL, NULL, NULL );
-    //ReleaseTmpReg
+    AppendSeq( start, GenInstr( NULL, "syscall", NULL, NULL, NULL ));
+    ReleaseTmpReg(t0);
+    // prints :)
     return start;
 }
 
 // Returns input from std in
-void
-Get(char * primaryType) {
-    int t0 = AvailTempReg();
-    char t0Txt = TmpRegName(t0);
-    switch(primaryType) {
-        // get int from std in
-        case "int": {
-            //GenInstr()
+struct ExprResult *
+Get(enum BaseTypes baseType) {
+
+    int valReg = AvailTmpReg();
+    char * regTxt = TmpRegName(valReg);
+    struct ExprResult * exprResult = malloc(sizeof(struct ExprResult));
+    struct InstrSeq * seq;
+    // read_int
+    switch( baseType ) {
+        case IntBaseType: {
+            seq = GenInstr( NULL, "li", "$v0", "11", NULL );
+            AppendSeq( seq, GenInstr( NULL, "li", "$v0", "5", NULL ));
+            AppendSeq( seq, GenInstr( NULL, "syscall", NULL, NULL, NULL ));
+            AppendSeq( seq, GenInstr( NULL, "move", regTxt, "$v0", NULL ));
+            exprResult->exprType = IntBaseType;
+            break;
+        }
+        case ChrBaseType: {
+            break;
+        }
+        default: {
+
         }
     }
+    exprResult->instrs = seq;
+    exprResult->registerNum = valReg;
+    return exprResult;
 }
-// instr seq?
 
 // Gets the temp register for an imm value
-void
-GetImmInt(int val) {
-    char * regName = Imm(val);
-    GenInstr(NULL, "$v0", NULL,  )
+struct ExprResult *
+GetImmInt(char * textVal) {
+    struct ExprResult * exprResult = malloc(sizeof(struct ExprResult));
+    int reg = AvailTmpReg();
+    struct InstrSeq * seq = GenInstr(NULL, "li", TmpRegName(reg), textVal, NULL);
+    exprResult->instrs = seq;
+    exprResult->registerNum = reg;
+    exprResult->exprType = IntBaseType;
+    return exprResult;
 }
 
-void
-ProcAssign(char * id,  struct * ExprResult) {
-    // put
+// struct ExprResult *
+// GetNegateFactor(struct ExprResult * exprRes) {
+//     int regNum = exprRes->registerNum;
+//     struct seq = exprRes->instrs;
+//     int t0 = AvailTmpReg();
+//     char * t0Txt = TmpRegName(t0);
+//     GenInstr(NULL, "li", t0Txt, "-1", NULL);
+//     AppendSeq(seq, GenInstr(NULL, "mult", TmpRegName(regNum), t0Txt, NULL));
+//     return exprRes;
+// GRAM: Factor  :  '-' Factor { $$ = GetNegateFactor($2); };
+// }
 
+struct InstrSeq *
+ProcAssign(char * id,  struct ExprResult * exprResult) {
+    struct InstrSeq * seq = exprResult->instrs;
+    struct SymEntry * entry = LookupName(IdentifierTable, id);
+    if(entry == NULL) {
+        PostMessageAndExit(GetCurrentColumn(), "The Id is never declared");
+    }
+    else {
+        // TODO: Make sure types are the same
+        // TODO: Verify correct type of attribute?
+        struct Attr * attr = GetAttr(entry);
+        int reg = exprResult->registerNum;
+        char * regName = TmpRegName(reg);
+        char * ref = attr->reference;
+        AppendSeq( seq, GenInstr(NULL, "sw", regName, ref, NULL) );
+        //ReleaseTmpReg(reg);
+    }
+    return seq;
 }
 
 struct ExprResult *
-ProcAddOp(struct ExprResult * term1, char op, struct ExprResult * term2) {
-    int tmpReg = AvailTmpReg();
-    char * tmpRegName = TmpRegName(tmpReg);
-    if ( op == '+' ) {
-        struct ExprResultGenInstr()
+EvalExpr(struct ExprResult * expr1, enum Operators op, struct ExprResult * expr2) {
+    struct ExprResult * exprRes = malloc(sizeof(struct ExprResult));
+    exprRes->registerNum = AvailTmpReg();
+    exprRes->exprType = IntBaseType;
+    exprRes->instrs = expr1->instrs;
+    AppendSeq(exprRes->instrs, expr2->instrs);
+    char * t0Txt = TmpRegName(exprRes->registerNum);
+    char * regLeft = TmpRegName(expr1->registerNum);
+    char * regRight = TmpRegName(expr2->registerNum);
+    struct InstrSeq * newSeq;
+    switch( op ) {
+        case ADD: {
+            newSeq = GenInstr(NULL, "add", t0Txt, regLeft, regRight);
+            break;
+        }
+        case SUB: {
+            newSeq = GenInstr(NULL, "sub", t0Txt, regLeft, regRight);
+            break;
+        }
+        case MUL: {
+            newSeq = GenInstr(NULL, "mul", t0Txt, regLeft, regRight);
+            break;
+        }
+        case DIV: {
+            newSeq = GenInstr(NULL, "div", t0Txt, regLeft, regRight);
+            break;
+        }
+        default: {
+            PostMessageAndExit(GetCurrentColumn(), "Invalid op");
+        }
     }
-    else if( op == '-' ) {
-        //GenInstr()
-    }
-    //GenInstr()
+    AppendSeq(exprRes->instrs, newSeq);
+
+    // TODO: Free registers? Free ops
+
+    return expr1;
 }
