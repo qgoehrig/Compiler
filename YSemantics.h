@@ -61,7 +61,9 @@ struct IdList *         AppendIdList(struct IdList * item, struct IdList * list)
 struct IdList *         ProcName(char * id, enum DeclTypes type);
 void                    ProcFunc(char * id, struct InstrSeq * instrs);
 struct InstrSeq *       ProcAssign(char * id, struct ExprResult * exprResult);
-struct InstrSeq *       Put(char * val);
+struct InstrSeq *       PutChrLit(char * val);
+struct InstrSeq *       PutVar(char * id);
 struct ExprResult *     Get(enum BaseTypes baseType);
 struct ExprResult *     GetImmInt(char * textVal);
+struct ExprResult *     GetVarExpr(char * ud);
 struct ExprResult *     EvalExpr(struct ExprResult * expr1, enum Operators op, struct ExprResult * expr2 );

@@ -167,9 +167,7 @@ void processFunctions(struct SymEntry * entry, int cnt, void * textCode) {
       if (!attr->typeDesc->funcDesc->funcCode) {
         PostMessageAndExit(GetCurrentColumn(),"function never implemented");
       }
-      else {
-        AppendSeq(textCode, attr->typeDesc->funcDesc->funcCode);
-      }
+      AppendSeq(textCode, attr->typeDesc->funcDesc->funcCode);
     } break;
   }
 }
@@ -203,11 +201,6 @@ Finish() {
   // run SymTab with InvokeOnEntries putting globals in data seg
   // run SymTab with InvokeOnEntries putting functions in code seq
 
-  // Operator   : '+'                                               { $$ = ADD; }
-  // Operator   : '-'                                               { $$ = SUB; }
-  // Operator  : '*'                                               { $$ = MUL; }
-  // Operator  : '/'                                               { $$ = DIV; }
-
   // combine and write
   struct InstrSeq * moduleCode = AppendSeq(textCode,dataCode);
   WriteSeq(moduleCode);
@@ -230,7 +223,7 @@ ProcDecls(struct IdList * idList, enum BaseTypes baseType) {
           typeDesc->primDesc = baseType;
       }
       else if( type == FuncType ) {
-          typeDesc-> funcDesc = malloc(sizeof(struct FuncDesc));
+          typeDesc->funcDesc = malloc(sizeof(struct FuncDesc));
       }
       SetAttr(entry, STRUCT_KIND, curAttr);
       idList = idList->next;
@@ -280,11 +273,16 @@ ProcName(char * id, enum DeclTypes type) {
 void
 ProcFunc(char * id, struct InstrSeq * instrs) {
   struct SymEntry * entry = LookupName(IdentifierTable, id);
+  if( entry == NULL ) {
+      PostMessageAndExit(GetCurrentColumn(), "Funct Id not declared");
+  }
   struct Attr * attr = GetAttr(entry);
   struct InstrSeq * seq = GenInstr(attr->reference, NULL, NULL, NULL, NULL);
   AppendSeq(seq, instrs);
-  struct InstrSeq * ret = GenInstr(NULL, "jr", NULL, NULL, NULL);
+  struct InstrSeq * ret = GenInstr(NULL, "jr", "$ra", NULL, NULL);
   AppendSeq(seq, ret);
+
+  attr->typeDesc->funcDesc->funcCode = seq;
   // lookup name
   // get attr
   // gen instr for function entry
@@ -292,18 +290,62 @@ ProcFunc(char * id, struct InstrSeq * instrs) {
   // function exit code, i.e. jump return
 }
 
-// Print something
+// Formats a Chr Lit to print
 struct InstrSeq *
-Put(char * val) {
+PutChrLit(char * val) {
     int t0 = AvailTmpReg();
     char * t0Txt = TmpRegName(t0);
-    struct InstrSeq * start = GenInstr( NULL, "li", t0Txt, val, NULL );
-    AppendSeq( start, GenInstr( NULL, "li", "$v0", "11", NULL ));
-    AppendSeq( start, GenInstr( NULL, "move", "$a0", t0Txt, NULL ));
-    AppendSeq( start, GenInstr( NULL, "syscall", NULL, NULL, NULL ));
+
+    int strLen = strlen(val);
+    char * placeholder = malloc(sizeof(char) * 4);
+    struct InstrSeq * seq;// = GenInstr( NULL, "li", t0Txt, val, NULL );
+    if ( strLen == 3 ) {
+        int intVal = val[1];
+        snprintf(placeholder, 4, "%d", intVal);
+        seq = GenInstr(NULL, "li", TmpRegName(t0), placeholder, NULL);
+    }
+    else {
+        if (val[2] == 'n') {
+            snprintf(placeholder, 4, "%d", 10);
+            seq = GenInstr(NULL, "li", TmpRegName(t0), placeholder, NULL);
+        } else if (val[2] == 't') {
+            snprintf(placeholder, 4, "%d", 9);
+            seq = GenInstr(NULL, "li", TmpRegName(t0), placeholder, NULL);
+        }
+    }
+    free(placeholder);
+    AppendSeq( seq, GenInstr( NULL, "li", "$v0", "11", NULL ));
+    AppendSeq( seq, GenInstr( NULL, "move", "$a0", t0Txt, NULL ));
+    AppendSeq( seq, GenInstr( NULL, "syscall", NULL, NULL, NULL ));
     ReleaseTmpReg(t0);
-    // prints :)
-    return start;
+    return seq;
+}
+
+struct InstrSeq *
+PutVar(char * id) {
+    struct SymEntry * entry = LookupName(IdentifierTable, id);
+    if(entry == NULL) {
+        PostMessageAndExit(GetCurrentColumn(), "Id not found");
+    }
+    struct Attr * attr = GetAttr(entry);
+    int t0 = AvailTmpReg();
+    char * t0Txt = TmpRegName(t0);
+    struct InstrSeq * seq = GenInstr(NULL, "lw", t0Txt, attr->reference, NULL);
+    int primDesc = attr->typeDesc->primDesc;
+    switch( primDesc ) {
+        case IntBaseType: {
+            AppendSeq(seq, GenInstr(NULL, "li", "$v0", "1", NULL));
+            break;
+        }
+        case ChrBaseType: {
+            AppendSeq(seq, GenInstr(NULL, "li", "$v0", "11", NULL));
+            break;
+        }
+    }
+    AppendSeq(seq, GenInstr(NULL, "move", "$a0", t0Txt, NULL));
+    AppendSeq(seq, GenInstr(NULL, "syscall", NULL, NULL, NULL));
+    ReleaseTmpReg(t0);
+    return seq;
 }
 
 // Returns input from std in
@@ -345,6 +387,29 @@ GetImmInt(char * textVal) {
     exprResult->instrs = seq;
     exprResult->registerNum = reg;
     exprResult->exprType = IntBaseType;
+    return exprResult;
+}
+
+struct ExprResult *
+GetVarExpr(char * id) {
+    struct SymEntry * entry = LookupName(IdentifierTable, id);
+    if(entry == NULL) {
+        PostMessageAndExit(GetCurrentColumn(), "Id not found");
+    }
+    struct Attr * attr = GetAttr(entry);
+    struct ExprResult * exprResult = malloc(sizeof(struct ExprResult));
+    int t0 = AvailTmpReg();
+    char * t0Txt = TmpRegName(t0);
+    exprResult->registerNum = t0;
+    // TODO: Add checking for declType: Temp fix below
+    int declType = attr->typeDesc->declType;
+    if(declType == PrimType) {
+        exprResult->exprType = attr->typeDesc->primDesc;
+    }
+    else {
+        exprResult->exprType = 0;
+    }
+    exprResult->instrs = GenInstr(NULL, "lw", t0Txt, attr->reference, NULL);
     return exprResult;
 }
 
