@@ -27,8 +27,8 @@ _main:
 			lw			$t3, 			_x
 			mul			$t4, 			$t2, 			$t3
 			lw			$t5, 			_y
-			add			$t6, 			$t2, 			$t5
-			sw			$t2, 			_r
+			add			$t6, 			$t4, 			$t5
+			sw			$t6, 			_r
 			li			$t7, 			120
 			li			$v0, 			11
 			move			$a0, 			$t7

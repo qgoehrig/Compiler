@@ -481,5 +481,5 @@ EvalExpr(struct ExprResult * expr1, enum Operators op, struct ExprResult * expr2
 
     // TODO: Free registers? Free ops
 
-    return expr1;
+    return exprRes;
 }
