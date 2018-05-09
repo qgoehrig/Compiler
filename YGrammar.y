@@ -98,11 +98,13 @@ FuncArgNames  : '(' ')'                                         {  };
 FuncBody      : '{' FuncStmts '}'                               { $$ = $2; };
 
 FuncStmts     : Stmt ';' FuncStmts                              { $$ = AppendSeq($1, $3); };
-FuncStmts     :                                                 {  };
+FuncStmts     :                                                 { $$ = NULL; };
 
 Stmt          : AssignStmt                                      { $$ = $1; };
 Stmt          : PutStmt                                         { $$ = $1; };
 Stmt          : IfStmt                                          { $$ = $1; };
+Stmt          : WhileStmt                                       { $$ = $1; };
+Stmt          :                                                 { $$ = NULL; };
 
 PutStmt       : PUT_TOK ChrLit ')'                          { $$ = PutChrLit($2); };
 PutStmt       : PUT_TOK Id ')'                              { $$ = PutVar($2); };
@@ -110,10 +112,9 @@ PutStmt       : PUT_TOK Id ')'                              { $$ = PutVar($2); }
 AssignStmt    : Id '=' Expr                                 { $$ = ProcAssign($1, $3); };
 
 IfStmt        : IF_TOK Cond FuncBody                        { $$ = ProcIf($2, $3, NULL); };
-IfStmt        : IF_TOK Cond FuncBody ELSE_TOK FuncBody      { $$ = ProcIf($2, $3, NULL); };
+IfStmt        : IF_TOK Cond FuncBody ELSE_TOK FuncBody      { $$ = ProcIf($2, $3, $5); };
 
-WhileStmt     : WHILE_TOK Cond FuncBody                     { $$ = ProcWhile($2 , $3); };
-
+WhileStmt     : WHILE_TOK Cond FuncBody                     { $$ = ProcWhile($2, $3); };
 
 Expr    :  Term                                             { $$ = $1; } ;
 Expr    :  Expr Operator Term                               { $$ = EvalExpr($1, $2, $3); };
@@ -124,9 +125,9 @@ Term    :  Factor                                           { $$ = $1; };
 Factor  : '(' Expr ')'                                     { $$ = $2; } ;
 Factor  : INTLIT_TOK                                       { $$ = GetImmInt(yytext); };
 Factor  : GET_TOK Type ')'                                 { $$ = Get($2); };
-Factor  : Id                                               { $$ = GetVarExpr($1); }
+Factor  : Id                                               { $$ = GetVarExpr($1); };
 
-ChrLit  : CHRLIT_TOK                                          { $$ = strdup(yytext); }
+ChrLit  : CHRLIT_TOK                                          { $$ = strdup(yytext); };
 Operator  : '+'                                               { $$ = Add; }
 Operator  : '-'                                               { $$ = Sub; }
 Operator  : '*'                                               { $$ = Mul; }

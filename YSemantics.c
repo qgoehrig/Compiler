@@ -483,3 +483,74 @@ EvalExpr(struct ExprResult * expr1, enum Operators op, struct ExprResult * expr2
 
     return exprRes;
 }
+
+// Evaluate a conditional statement, used in fors, ifs, etc.
+struct CondResult *
+EvalCond(struct ExprResult * expr1, enum CondOps condOp, struct ExprResult * expr2) {
+    struct CondResult * result = malloc(sizeof(struct CondResult));
+    result->instrs = expr1->instrs;
+    AppendSeq(result->instrs, expr2->instrs);
+    result->label = GenLabel();
+    char * op;
+    switch (condOp) {
+        case NotEql:
+            op = "beq";
+            break;
+        case Eql:
+            op = "bne";
+            break;
+        case Less:
+            op = "bge";
+            break;
+        case Grtr:
+            op = "ble";
+            break;
+        case GrtrEql:
+            op = "bl";
+            break;
+        case LessEql:
+            op = "bg";
+            break;
+        default:
+            PostMessageAndExit(GetCurrentColumn(), "Invalid Comparison Operator");
+    }
+    AppendSeq(result->instrs, GenInstr(NULL, op, TmpRegName(expr1->registerNum),
+                                TmpRegName(expr2->registerNum), result->label));
+    //ReleaseTmpReg(expr1->registerNum);
+    //ReleaseTmpReg(expr2->registerNum);
+    //free expr1, expr2...
+    return result;
+}
+
+struct InstrSeq *
+ProcIf(struct CondResult * condResult, struct InstrSeq * thenBody, struct InstrSeq * elseBody) {
+    struct InstrSeq * seq = condResult->instrs;
+    AppendSeq(seq, thenBody);
+    if( elseBody == NULL ) {
+        AppendSeq(seq, GenInstr(condResult->label, NULL, NULL, NULL, NULL));
+    }
+    else {
+        char * elseLabel = GenLabel();
+        AppendSeq(seq, GenInstr(NULL, "b", elseLabel, NULL, NULL));
+        AppendSeq(seq, GenInstr(condResult->label, NULL, NULL, NULL, NULL));
+        AppendSeq(seq, elseBody);
+        AppendSeq(seq, GenInstr(elseLabel, NULL, NULL, NULL, NULL));
+    }
+    //free(condResult->label);
+    //free(condResult);
+    return seq;
+    //return seq;
+}
+
+struct InstrSeq *
+ProcWhile(struct CondResult * condResult, struct InstrSeq * body) {
+    char * loopLabel = GenLabel();
+    struct InstrSeq * seq = GenInstr(loopLabel, NULL, NULL, NULL, NULL);
+    AppendSeq(seq, condResult->instrs);
+    AppendSeq(seq, body);
+    AppendSeq(seq, GenInstr(NULL, "b", loopLabel, NULL, NULL));
+    AppendSeq(seq, GenInstr(condResult->label, NULL, NULL, NULL, NULL));
+    //free(condResult->label);
+    //free(condResult);
+    return seq;
+}
