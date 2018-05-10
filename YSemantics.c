@@ -356,7 +356,7 @@ PutVar(char * id) {
     }
     AppendSeq(seq, GenInstr(NULL, "move", "$a0", t0Txt, NULL));
     AppendSeq(seq, GenInstr(NULL, "syscall", NULL, NULL, NULL));
-    //ReleaseTmpReg(t0);
+    ReleaseTmpReg(t0);
     return seq;
 }
 
@@ -568,7 +568,7 @@ ProcWhile(struct CondResult * condResult, struct InstrSeq * body) {
 }
 
 struct InstrSeq *
-PutStrLit(char * string) {
+PutStrLit(const char * string) {
     struct SymEntry * strEntry = LookupName(StringLitTable, string);
     struct Attr * attr;
     char * strLabel;
@@ -578,7 +578,6 @@ PutStrLit(char * string) {
         strLabel = GenLabel();
         strEntry = EnterName(StringLitTable, string);
         attr = malloc(sizeof(struct Attr));
-        char * ref = malloc((strlen(string) + 1) * sizeof(char));
         // reference acts as label here
         attr->reference = strLabel;
         SetAttr(strEntry, STRING_KIND, attr);
@@ -590,5 +589,24 @@ PutStrLit(char * string) {
     struct InstrSeq * seq = GenInstr(NULL, "li", "$v0", "4", NULL);
     AppendSeq(seq, GenInstr(NULL, "la", "$a0", strLabel, NULL));
     AppendSeq(seq, GenInstr(NULL, "syscall", NULL, NULL, NULL));
+    return seq;
+}
+// SEM 2
+
+struct InstrSeq *
+IncrVar(char * id, char * amount) {
+    printf("ID = %s\n", amount);
+    struct SymEntry * entry = LookupName(IdentifierTable, id);
+    if(entry == NULL) {
+        PostMessageAndExit(GetCurrentColumn(), "Id not defined");
+    }
+    struct Attr * attr = GetAttr(entry);
+    char * ref = attr->reference;
+    int t0 = AvailTmpReg();
+    char * t0Txt = TmpRegName(t0);
+    struct InstrSeq * seq = GenInstr(NULL, "lw", t0Txt, ref, NULL);
+    AppendSeq(seq, GenInstr(NULL, "addi", t0Txt, t0Txt, amount));
+    AppendSeq(seq, GenInstr(NULL, "sw", t0Txt, ref, NULL));
+    ReleaseTmpReg(t0);
     return seq;
 }

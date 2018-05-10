@@ -35,6 +35,7 @@
 %type <InstrSeq> PutStmt
 %type <InstrSeq> IfStmt
 %type <InstrSeq> WhileStmt
+%type <InstrSeq> IncrDecrStmt
 %type <InstrSeq> FuncBody
 %type <InstrSeq> FuncStmts
 %type <InstrSeq> Stmt
@@ -42,7 +43,8 @@
 %type <ExprResult> Term
 %type <ExprResult> Factor
 %type <Text> ChrLit
-%type <Operator> Operator
+%type <Operator> AddOp
+%type <Operator> MultOp
 %type <CondOp> CondOp
 %type <CondResult> Cond
 %type <Text> StringLit
@@ -69,6 +71,8 @@
 %token LESS_EQL_TOK 18
 %token WHILE_TOK    19
 %token STRLIT_TOK   20
+%token INCR_TOK     21
+%token DECR_TOK     22
 
 // can't go past 32 without conflicting with single char tokens
 // could use larger token numbers
@@ -106,6 +110,7 @@ Stmt          : AssignStmt                                      { $$ = $1; };
 Stmt          : PutStmt                                         { $$ = $1; };
 Stmt          : IfStmt                                          { $$ = $1; };
 Stmt          : WhileStmt                                       { $$ = $1; };
+Stmt          : IncrDecrStmt                                    { $$ = $1; };
 Stmt          :                                                 { $$ = NULL; };
 
 PutStmt       : PUT_TOK ChrLit ')'                          { $$ = PutChrLit($2); };
@@ -119,10 +124,13 @@ IfStmt        : IF_TOK Cond FuncBody ELSE_TOK FuncBody      { $$ = ProcIf($2, $3
 
 WhileStmt     : WHILE_TOK Cond FuncBody                     { $$ = ProcWhile($2, $3); };
 
-Expr    :  Term                                             { $$ = $1; } ;
-Expr    :  Expr Operator Term                               { $$ = EvalExpr($1, $2, $3); };
+IncrDecrStmt  : Id INCR_TOK                                 { $$ = IncrVar($1, "1"); };
+IncrDecrStmt  : Id DECR_TOK                                 { $$ = IncrVar($1, "-1"); };
 
-Term    :  Term Operator Factor                             { $$ = EvalExpr($1, $2, $3); };
+Expr    :  Term                                             { $$ = $1; } ;
+Expr    :  Expr AddOp Term                               { $$ = EvalExpr($1, $2, $3); };
+
+Term    :  Term MultOp Factor                             { $$ = EvalExpr($1, $2, $3); };
 Term    :  Factor                                           { $$ = $1; };
 
 Factor  : '(' Expr ')'                                     { $$ = $2; } ;
@@ -133,10 +141,10 @@ Factor  : Id                                               { $$ = GetVarExpr($1)
 ChrLit    : CHRLIT_TOK                                     { $$ = strdup(yytext); };
 StringLit : STRLIT_TOK                                     { $$ = strdup(yytext); };
 
-Operator  : '+'                                               { $$ = Add; }
-Operator  : '-'                                               { $$ = Sub; }
-Operator  : '*'                                               { $$ = Mul; }
-Operator  : '/'                                               { $$ = Div; }
+AddOp  : '+'                                               { $$ = Add; }
+AddOp  : '-'                                               { $$ = Sub; }
+MultOp  : '*'                                               { $$ = Mul; }
+MultOp  : '/'                                               { $$ = Div; }
 
 Cond      : '(' Expr CondOp Expr ')'                            { $$ = EvalCond($2, $3, $4); };
 CondOp    : NOTEQL_TOK                                          { $$ = NotEql; };

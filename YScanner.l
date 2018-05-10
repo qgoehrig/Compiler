@@ -8,7 +8,7 @@ Digit   [0-9]
 		result = (c == EOF) ? YY_NULL : (buf[0] = c, 1); \
     }
 
-    bool shouldLog = true;
+    bool shouldLog = false;
 
     #define RETURN(val) \
     { if (shouldLog) fprintf(stderr,"Token#=%d, Length=%zu, Text=\"%s\"\n",val,yyleng,yytext); \
@@ -51,11 +51,13 @@ Digit   [0-9]
 \"(.)*\"                        { if (!IN_COMMENT) RETURN(STRLIT_TOK); }
 \'\\.\'                         { if (!IN_COMMENT) RETURN(CHRLIT_TOK); }
 \'.\'                           { if (!IN_COMMENT) RETURN(CHRLIT_TOK); }
+\+\+                            { if (!IN_COMMENT) RETURN(INCR_TOK); }
+\-\-                            { if (!IN_COMMENT) RETURN(DECR_TOK); }
 \*                              { if (!IN_COMMENT) RETURN('*'); }
 \/                              { if (!IN_COMMENT) RETURN('/'); }
 \+                              { if (!IN_COMMENT) RETURN('+'); }
 \-                              { if (!IN_COMMENT) RETURN('-'); }
-{Letter}({Letter}|{Digit})*		{ printf("id"); if (!IN_COMMENT) RETURN(IDENT_TOK); }
+{Letter}({Letter}|{Digit})*		{ if (!IN_COMMENT) RETURN(IDENT_TOK); }
 -?{Digit}+			            { if (!IN_COMMENT) RETURN(INTLIT_TOK); }
 "{"                             { if (!IN_COMMENT) RETURN('{'); }
 "}"                             { if (!IN_COMMENT) RETURN('}'); }

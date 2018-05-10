@@ -37,7 +37,7 @@ struct Attr {
 };
 
 // Operators and Expressions
-enum Operators { Add, Sub, Mul, Div };
+enum Operators { Add, Sub, Mul, Div, Increment, Decrement };
 
 struct ExprResult {
     struct InstrSeq * instrs;
@@ -72,9 +72,11 @@ struct InstrSeq *       ProcIf(struct CondResult * condResult, struct InstrSeq *
 struct InstrSeq *       ProcWhile(struct CondResult * condResult, struct InstrSeq * body );
 struct InstrSeq *       ProcAssign(char * id, struct ExprResult * exprResult);
 struct InstrSeq *       PutChrLit(char * val);
+struct InstrSeq *       PutStrLit(const char * string);
 struct InstrSeq *       PutVar(char * id);
+struct InstrSeq *       IncrVar(char * id, char * amount);
 struct ExprResult *     Get(enum BaseTypes baseType);
 struct ExprResult *     GetImmInt(char * textVal);
-struct ExprResult *     GetVarExpr(char * ud);
+struct ExprResult *     GetVarExpr(char * id);
 struct ExprResult *     EvalExpr(struct ExprResult * expr1, enum Operators op, struct ExprResult * expr2);
 struct CondResult *     EvalCond(struct ExprResult * expr1, enum CondOps condOp, struct ExprResult * expr2);
