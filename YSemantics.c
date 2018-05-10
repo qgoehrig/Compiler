@@ -207,6 +207,7 @@ Finish() {
   InvokeOnEntries(IdentifierTable,true,processGlobalIdentifier,0,dataCode);
 
   // run StringLitTable adding string lits in data seq
+  //AppendSeq(dataCode, GenInstr("__iobuf", ".space", "4", NULL, NULL));
   InvokeOnEntries(StringLitTable,false, processStringLit ,0,dataCode);
 
   // run SymTab with InvokeOnEntries putting functions in code seq
@@ -355,7 +356,7 @@ PutVar(char * id) {
     }
     AppendSeq(seq, GenInstr(NULL, "move", "$a0", t0Txt, NULL));
     AppendSeq(seq, GenInstr(NULL, "syscall", NULL, NULL, NULL));
-    ReleaseTmpReg(t0);
+    //ReleaseTmpReg(t0);
     return seq;
 }
 
@@ -420,6 +421,7 @@ GetVarExpr(char * id) {
     else {
         exprResult->exprType = 0;
     }
+
     exprResult->instrs = GenInstr(NULL, "lw", t0Txt, attr->reference, NULL);
     return exprResult;
 }
@@ -484,7 +486,8 @@ EvalExpr(struct ExprResult * expr1, enum Operators op, struct ExprResult * expr2
             PostMessageAndExit(GetCurrentColumn(), "Invalid op");
     }
     AppendSeq(exprRes->instrs, newSeq);
-
+    ReleaseTmpReg(expr1->registerNum);
+    ReleaseTmpReg(expr2->registerNum);
     // TODO: Free registers? Free ops
 
     return exprRes;
@@ -522,6 +525,8 @@ EvalCond(struct ExprResult * expr1, enum CondOps condOp, struct ExprResult * exp
     }
     AppendSeq(result->instrs, GenInstr(NULL, op, TmpRegName(expr1->registerNum),
                                 TmpRegName(expr2->registerNum), result->label));
+    ReleaseTmpReg(expr1->registerNum);
+    ReleaseTmpReg(expr2->registerNum);
     //ReleaseTmpReg(expr1->registerNum);
     //ReleaseTmpReg(expr2->registerNum);
     //free expr1, expr2...
@@ -556,6 +561,7 @@ ProcWhile(struct CondResult * condResult, struct InstrSeq * body) {
     AppendSeq(seq, body);
     AppendSeq(seq, GenInstr(NULL, "b", loopLabel, NULL, NULL));
     AppendSeq(seq, GenInstr(condResult->label, NULL, NULL, NULL, NULL));
+    free(loopLabel);
     //free(condResult->label);
     //free(condResult);
     return seq;
