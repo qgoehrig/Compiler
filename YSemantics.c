@@ -14,6 +14,7 @@
 // Shared Data
 
 struct SymTab * IdentifierTable;
+struct SymTab * StringLitTable;
 enum AttrKinds { VOID_KIND = -1, INT_KIND, STRING_KIND, STRUCT_KIND };
 
 char * BaseTypeNames[2] = { "int", "chr"};
@@ -41,6 +42,7 @@ PostMessageAndExit(int col, char * message) {
 void
 InitSemantics() {
   IdentifierTable = CreateSymTab(100,"global",NULL);
+  StringLitTable = CreateSymTab(100, "strLits", NULL);
 }
 
 char *
@@ -172,6 +174,11 @@ void processFunctions(struct SymEntry * entry, int cnt, void * textCode) {
   }
 }
 
+void processStringLit(struct SymEntry * entry, int cnt, void * dataCode) {
+  struct Attr * attr = GetAttr(entry);
+  AppendSeq(dataCode, GenInstr(attr->reference, ".asciiz", GetName(entry), NULL, NULL));
+}
+
 // Semantics Actions
 
 void
@@ -196,10 +203,14 @@ Finish() {
   AppendSeq(textCode,GenInstr(NULL,"li","$v0","10",NULL));
   AppendSeq(textCode,GenInstr(NULL,"syscall",NULL,NULL,NULL));
 
-  InvokeOnEntries(IdentifierTable,true,processGlobalIdentifier,0,dataCode);
-  InvokeOnEntries(IdentifierTable,true,processFunctions,0,textCode);
   // run SymTab with InvokeOnEntries putting globals in data seg
+  InvokeOnEntries(IdentifierTable,true,processGlobalIdentifier,0,dataCode);
+
+  // run StringLitTable adding string lits in data seq
+  InvokeOnEntries(StringLitTable,false, processStringLit ,0,dataCode);
+
   // run SymTab with InvokeOnEntries putting functions in code seq
+  InvokeOnEntries(IdentifierTable,true,processFunctions,0,textCode);
 
   // combine and write
   struct InstrSeq * moduleCode = AppendSeq(textCode,dataCode);
@@ -457,25 +468,20 @@ EvalExpr(struct ExprResult * expr1, enum Operators op, struct ExprResult * expr2
     char * regRight = TmpRegName(expr2->registerNum);
     struct InstrSeq * newSeq;
     switch( op ) {
-        case Add: {
+        case Add:
             newSeq = GenInstr(NULL, "add", t0Txt, regLeft, regRight);
             break;
-        }
-        case Sub: {
+        case Sub:
             newSeq = GenInstr(NULL, "sub", t0Txt, regLeft, regRight);
             break;
-        }
-        case Mul: {
+        case Mul:
             newSeq = GenInstr(NULL, "mul", t0Txt, regLeft, regRight);
             break;
-        }
-        case Div: {
+        case Div:
             newSeq = GenInstr(NULL, "div", t0Txt, regLeft, regRight);
             break;
-        }
-        default: {
+        default:
             PostMessageAndExit(GetCurrentColumn(), "Invalid op");
-        }
     }
     AppendSeq(exprRes->instrs, newSeq);
 
@@ -552,5 +558,31 @@ ProcWhile(struct CondResult * condResult, struct InstrSeq * body) {
     AppendSeq(seq, GenInstr(condResult->label, NULL, NULL, NULL, NULL));
     //free(condResult->label);
     //free(condResult);
+    return seq;
+}
+
+struct InstrSeq *
+PutStrLit(char * string) {
+    struct SymEntry * strEntry = LookupName(StringLitTable, string);
+    struct Attr * attr;
+    char * strLabel;
+
+    // If first strlit of this name, create new entry and attr for label
+    if( strEntry == NULL ) {
+        strLabel = GenLabel();
+        strEntry = EnterName(StringLitTable, string);
+        attr = malloc(sizeof(struct Attr));
+        char * ref = malloc((strlen(string) + 1) * sizeof(char));
+        // reference acts as label here
+        attr->reference = strLabel;
+        SetAttr(strEntry, STRING_KIND, attr);
+    }
+    else {
+        attr = GetAttr(strEntry);
+        strLabel = attr->reference;
+    }
+    struct InstrSeq * seq = GenInstr(NULL, "li", "$v0", "4", NULL);
+    AppendSeq(seq, GenInstr(NULL, "la", "$a0", strLabel, NULL));
+    AppendSeq(seq, GenInstr(NULL, "syscall", NULL, NULL, NULL));
     return seq;
 }

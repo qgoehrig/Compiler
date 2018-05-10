@@ -1,0 +1,14 @@
+/* Input two numbers and calculate GCD
+*/
+
+decl x, y : int;
+decl main() : int;
+
+impl main() {
+    if ( 1 < 3 ) {
+        put('A');
+    }
+    else {
+        put('B');
+    }
+};

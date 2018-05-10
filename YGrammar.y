@@ -45,6 +45,7 @@
 %type <Operator> Operator
 %type <CondOp> CondOp
 %type <CondResult> Cond
+%type <Text> StringLit
 
 /* List of token name and corresponding numbers */
 /* y.tab.h will be generated from these */
@@ -67,6 +68,7 @@
 %token GRTR_EQL_TOK 17
 %token LESS_EQL_TOK 18
 %token WHILE_TOK    19
+%token STRLIT_TOK   20
 
 // can't go past 32 without conflicting with single char tokens
 // could use larger token numbers
@@ -108,6 +110,7 @@ Stmt          :                                                 { $$ = NULL; };
 
 PutStmt       : PUT_TOK ChrLit ')'                          { $$ = PutChrLit($2); };
 PutStmt       : PUT_TOK Id ')'                              { $$ = PutVar($2); };
+PutStmt       : PUT_TOK StringLit ')'                       { $$ = PutStrLit($2); };
 
 AssignStmt    : Id '=' Expr                                 { $$ = ProcAssign($1, $3); };
 
@@ -127,7 +130,9 @@ Factor  : INTLIT_TOK                                       { $$ = GetImmInt(yyte
 Factor  : GET_TOK Type ')'                                 { $$ = Get($2); };
 Factor  : Id                                               { $$ = GetVarExpr($1); };
 
-ChrLit  : CHRLIT_TOK                                          { $$ = strdup(yytext); };
+ChrLit    : CHRLIT_TOK                                     { $$ = strdup(yytext); };
+StringLit : STRLIT_TOK                                     { $$ = strdup(yytext); };
+
 Operator  : '+'                                               { $$ = Add; }
 Operator  : '-'                                               { $$ = Sub; }
 Operator  : '*'                                               { $$ = Mul; }

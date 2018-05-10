@@ -8,6 +8,7 @@ _main:
 			li			$v0, 			4
 			la			$a0, 			L1
 			syscall
+			li			$v0, 			11
 			li			$v0, 			5
 			syscall
 			move			$t0, 			$v0
@@ -15,45 +16,45 @@ _main:
 			li			$v0, 			4
 			la			$a0, 			L2
 			syscall
-			lw			$t0, 			_x
+			lw			$t1, 			_x
 			li			$v0, 			1
-			move			$a0, 			$t0
+			move			$a0, 			$t1
 			syscall
 			li			$v0, 			4
 			la			$a0, 			L3
 			syscall
-			li			$t0, 			1
-			sw			$t0, 			_fac
-L5:
-			lw			$t0, 			_x
-			li			$t1, 			0
-			ble			$t0, 			$t1, 			L4
-			lw			$t0, 			_fac
-			lw			$t1, 			_x
-			mul			$t2, 			$t0, 			$t1
-			sw			$t2, 			_fac
-			lw			$t0, 			_x
 			li			$t1, 			1
-			sub			$t2, 			$t0, 			$t1
-			sw			$t2, 			_x
+			sw			$t1, 			_fac
+L5:
+			lw			$t2, 			_x
+			li			$t3, 			0
+			ble			$t2, 			$t3, 			L4
+			lw			$t4, 			_fac
+			lw			$t5, 			_x
+			mul			$t6, 			$t4, 			$t5
+			sw			$t6, 			_fac
+			lw			$t7, 			_x
+			li			$t8, 			1
+			sub			$t9, 			$t7, 			$t8
+			sw			$t9, 			_x
 			b			L5
 L4:
 			li			$v0, 			4
 			la			$a0, 			L6
 			syscall
-			lw			$t0, 			_fac
+			lw			$s0, 			_fac
 			li			$v0, 			1
-			move			$a0, 			$t0
+			move			$a0, 			$s0
 			syscall
 			li			$v0, 			4
-			la			$a0, 			L3
+			la			$a0, 			_"\n"
 			syscall
 			jr			$ra
 			.data
 _x:			.word			0
 _fac:			.word			0
 __iobuf:			.space			4
-L3:			.asciiz			"\n"
-L6:			.asciiz			"factorial = "
-L1:			.asciiz			"> "
-L2:			.asciiz			"x = "
+_"x = ":			.asciiz			"x = "
+_"factorial = ":			.asciiz			"factorial = "
+_"> ":			.asciiz			"> "
+_"\n":			.asciiz			"\n"
