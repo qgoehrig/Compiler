@@ -58,10 +58,12 @@ _main:
 L4:
 			lw			$t2, 			_x
 			lw			$t3, 			_y
-			sub			$t5, 			$t2, 			$t3
-			sub			$t6, 			$t2, 			$t3
-			or			$t4, 			$t5, 			$t6
+			seq			$t4, 			$t2, 			$t3
 			beq			$zero, 			$t4, 			L1
+			li			$t5, 			10
+			li			$v0, 			11
+			move			$a0, 			$t5
+			syscall
 			lw			$t5, 			_x
 			lw			$t6, 			_y
 			slt			$t7, 			$t5, 			$t6

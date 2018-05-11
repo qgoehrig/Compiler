@@ -28,8 +28,7 @@ _main:
 L5:
 			lw			$t2, 			_x
 			li			$t3, 			0
-			sub			$t5, 			$t2, 			$t3
-			slt			$t4, 			$zero, 			$t5
+			sgt			$t4, 			$t2, 			$t3
 			beq			$zero, 			$t4, 			L4
 			lw			$t5, 			_fac
 			lw			$t6, 			_x

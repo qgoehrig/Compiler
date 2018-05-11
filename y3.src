@@ -13,6 +13,7 @@ impl main() {
   put('y'); put('='); put(y); put('\n');
 
   while (x ## y) {
+    put('\n');
     if (x < y) {
       y = y - x;
     }

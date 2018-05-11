@@ -16,8 +16,7 @@ _main:
 L10:
 			lw			$t1, 			_p
 			li			$t2, 			1
-			sub			$t4, 			$t1, 			$t2
-			slt			$t3, 			$zero, 			$t4
+			sgt			$t3, 			$t1, 			$t2
 			beq			$zero, 			$t3, 			L2
 			li			$v0, 			4
 			la			$a0, 			L3
@@ -46,11 +45,7 @@ L8:
 			lw			$t9, 			_d
 			mul			$s1, 			$t7, 			$t9
 			lw			$t7, 			_p
-			sub			$s2, 			$s1, 			$t7
-			slt			$s2, 			$s2, 			$zero
-			sub			$s3, 			$t7, 			$s1
-			slt			$s3, 			$s3, 			$zero
-			nor			$t9, 			$s2, 			$s3
+			seq			$t9, 			$s1, 			$t7
 			beq			$zero, 			$t9, 			L6
 			lw			$s2, 			_d
 			li			$v0, 			1

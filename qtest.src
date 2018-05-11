@@ -6,11 +6,11 @@ decl main() : int;
 
 
 impl main() {
-  a = 1;
-  b = 2;
-  c = 3;
-  if (a < b && b < c && a + b == c) { put("first true\n"); };
-  if (a > b || (b < c && a + b == c)) { put("second true\n"); };
-  if (a > b || b > c) { put("third true\n"); };
-  if ( !(a > b || b > c) ) { put("forth true\n"); };
+    a = 1;
+    b = 2;
+    c = 3;
+    if (a < b && b < c && a + b == c) { put("first true\n"); };
+    if (a > b || (b < c && a + b == c)) { put("second true\n"); };
+    if (a > b || b > c) { put("third true\n"); };
+    if ( !(a > b || b > c) ) { put("forth true\n"); };
 };

@@ -136,11 +136,12 @@ IncrDecrStmt  : Id DECR_TOK                                 { $$ = IncrVar($1, "
 Expr          : Term                                        { $$ = $1; };
 Expr          : Expr AddOp Term                             { $$ = EvalExpr($1, $2, $3); };
 
-BoolExpr      : '(' BoolExpr ')'                            { $$ = $2; };
+BoolExpr      : '(' BoolExpr ')'                                { $$ = $2; };
 BoolExpr      : Expr CondOp Expr                            { $$ = EvalBoolExpr($1, $2, $3); };
 BoolExpr      : NOT_TOK BoolExpr                            { $$ = NegateExpr($2); };
 BoolExpr      : BoolExpr AND_TOK BoolExpr                   { $$ = AndOrExpr($1, "and", $3); };
 BoolExpr      : BoolExpr OR_TOK BoolExpr                    { $$ = AndOrExpr($1, "or", $3); };
+BoolExpr      :                                             { };
 
 
 Term    :  Term MultOp Factor                               { $$ = EvalExpr($1, $2, $3); };

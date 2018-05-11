@@ -8,7 +8,7 @@ Digit   [0-9]
 		result = (c == EOF) ? YY_NULL : (buf[0] = c, 1); \
     }
 
-    bool shouldLog = true;
+    bool shouldLog = false;
 
     #define RETURN(val) \
     { if (shouldLog) fprintf(stderr,"Token#=%d, Length=%zu, Text=\"%s\"\n",val,yyleng,yytext); \

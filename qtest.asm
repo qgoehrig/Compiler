@@ -14,73 +14,60 @@ _main:
 			lw			$t3, 			_a
 			lw			$t4, 			_b
 			slt			$t5, 			$t3, 			$t4
-			lw			$t6, 			_b
-			lw			$t7, 			_c
-			slt			$t8, 			$t6, 			$t7
-			lw			$t9, 			_a
-			lw			$s0, 			_b
-			add			$s1, 			$t9, 			$s0
-			lw			$t9, 			_c
-			sub			$s2, 			$s1, 			$t9
-			slt			$s2, 			$s2, 			$zero
-			sub			$s3, 			$t9, 			$s1
-			slt			$s3, 			$s3, 			$zero
-			nor			$s0, 			$s2, 			$s3
-			and			$s2, 			$t8, 			$t8
-			and			$s3, 			$t5, 			$t5
-			beq			$zero, 			$s3, 			L1
+			lw			$t3, 			_b
+			lw			$t4, 			_c
+			slt			$t6, 			$t3, 			$t4
+			lw			$t3, 			_a
+			lw			$t4, 			_b
+			add			$t7, 			$t3, 			$t4
+			lw			$t3, 			_c
+			seq			$t4, 			$t7, 			$t3
+			and			$t3, 			$t6, 			$t6
+			and			$t4, 			$t5, 			$t5
+			beq			$zero, 			$t4, 			L1
 			li			$v0, 			4
 			la			$a0, 			L2
 			syscall
 L1:
-			lw			$s4, 			_a
-			lw, 			_b
-			sub, 			$s4
-			slt, 			$zero
-			lw, 			_b
-			lw, 			_c
-			slt
-			lw, 			_a
-			lw, 			_b
-			add
-			lw, 			_c
-			sub
-			slt, 			$zero
-			sub
-			slt, 			$zero
-			nor
-			and
-			or
-			beq			$zero, 			L3
+			lw			$t3, 			_a
+			lw			$t5, 			_b
+			sgt			$t6, 			$t3, 			$t5
+			lw			$t3, 			_b
+			lw			$t5, 			_c
+			slt			$t7, 			$t3, 			$t5
+			lw			$t3, 			_a
+			lw			$t5, 			_b
+			add			$t8, 			$t3, 			$t5
+			lw			$t3, 			_c
+			seq			$t5, 			$t8, 			$t3
+			and			$t3, 			$t7, 			$t7
+			or			$t5, 			$t6, 			$t6
+			beq			$zero, 			$t5, 			L3
 			li			$v0, 			4
 			la			$a0, 			L4
 			syscall
 L3:
-			lw, 			_a
-			lw, 			_b
-			sub
-			slt, 			$zero
-			lw, 			_b
-			lw, 			_c
-			sub
-			slt, 			$zero
-			or
-			beq			$zero, 			L5
+			lw			$t3, 			_a
+			lw			$t6, 			_b
+			sgt			$t7, 			$t3, 			$t6
+			lw			$t3, 			_b
+			lw			$t6, 			_c
+			sgt			$t8, 			$t3, 			$t6
+			or			$t3, 			$t7, 			$t7
+			beq			$zero, 			$t3, 			L5
 			li			$v0, 			4
 			la			$a0, 			L6
 			syscall
 L5:
-			lw, 			_a
-			lw, 			_b
-			sub
-			slt, 			$zero
-			lw, 			_b
-			lw, 			_c
-			sub
-			slt, 			$zero
-			or
-			nor
-			beq			$zero, 			L7
+			lw			$t6, 			_a
+			lw			$t7, 			_b
+			sgt			$t8, 			$t6, 			$t7
+			lw			$t6, 			_b
+			lw			$t7, 			_c
+			sgt			$t9, 			$t6, 			$t7
+			or			$t6, 			$t8, 			$t8
+			nor			$t6, 			$t6, 			$t6
+			beq			$zero, 			$t6, 			L7
 			li			$v0, 			4
 			la			$a0, 			L8
 			syscall

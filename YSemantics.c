@@ -422,7 +422,6 @@ GetVarExpr(char * id) {
     else {
         exprResult->exprType = 0;
     }
-
     exprResult->instrs = GenInstr(NULL, "lw", t0Txt, attr->reference, NULL);
     return exprResult;
 }
@@ -454,7 +453,6 @@ ProcAssign(char * id,  struct ExprResult * exprResult) {
         char * regName = TmpRegName(reg);
         char * ref = attr->reference;
         AppendSeq( seq, GenInstr(NULL, "sw", regName, ref, NULL) );
-        //ReleaseTmpReg(reg);
     }
     return seq;
 }
@@ -489,94 +487,81 @@ EvalExpr(struct ExprResult * expr1, enum Operators op, struct ExprResult * expr2
     AppendSeq(exprRes->instrs, newSeq);
     ReleaseTmpReg(expr1->registerNum);
     ReleaseTmpReg(expr2->registerNum);
-    // TODO: Free registers? Free ops
-
+    free(expr1);
+    free(expr2);
     return exprRes;
 }
 
 // Evaluate a conditional statement, used in fors, ifs, etc.
-struct CondResult *
-EvalCond(struct ExprResult * expr1, enum CondOps condOp, struct ExprResult * expr2) {
-    struct CondResult * result = malloc(sizeof(struct CondResult));
-    result->condOp = condOp;
-    result->instrs = expr1->instrs;
-    AppendSeq(result->instrs, expr2->instrs);
-    result->label = GenLabel();
-    char * op;
-    switch (condOp) {
-        case NotEql: op = "beq";
-            break;
-        case Eql: op = "bne";
-            break;
-        case Less: op = "bge";
-            break;
-        case Grtr: op = "ble";
-            break;
-        case GrtrEql: op = "blt";
-            break;
-        case LessEql: op = "bgt";
-            break;
-        default:
-            PostMessageAndExit(GetCurrentColumn(), "Invalid Comparison Operator");
-    }
-    AppendSeq(result->instrs, GenInstr(NULL, op, TmpRegName(expr1->registerNum),
-        TmpRegName(expr2->registerNum), result->label));
-    //ReleaseTmpReg(expr1->registerNum);
-    //ReleaseTmpReg(expr2->registerNum);
-    //Cond      : Expr CondOp Expr    { $$ = EvalCond($1, $2, $3); }
-    //free expr1, expr2...
-    return result;
-}
+// struct CondResult *
+// EvalCond(struct ExprResult * expr1, enum CondOps condOp, struct ExprResult * expr2) {
+//     struct CondResult * result = malloc(sizeof(struct CondResult));
+//     result->condOp = condOp;
+//     result->instrs = expr1->instrs;
+//     AppendSeq(result->instrs, expr2->instrs);
+//     result->label = GenLabel();
+//     char * op;
+//     switch (condOp) {
+//         case NotEql: op = "beq";
+//             break;
+//         case Eql: op = "bne";
+//             break;
+//         case Less: op = "bge";
+//             break;
+//         case Grtr: op = "ble";
+//             break;
+//         case GrtrEql: op = "blt";
+//             break;
+//         case LessEql: op = "bgt";
+//             break;
+//         default:
+//             PostMessageAndExit(GetCurrentColumn(), "Invalid Comparison Operator");
+//     }
+//     AppendSeq(result->instrs, GenInstr(NULL, op, TmpRegName(expr1->registerNum),
+//         TmpRegName(expr2->registerNum), result->label));
+//     //ReleaseTmpReg(expr1->registerNum);
+//     //ReleaseTmpReg(expr2->registerNum);
+//     //free expr1, expr2...
+//     return result;
+// }
 
 struct ExprResult *
 EvalBoolExpr(struct ExprResult * expr1, enum CondOps condOp, struct ExprResult * expr2) {
+    printf("BOOL EVALUATED\n");
     struct ExprResult * newExpr = malloc(sizeof(struct ExprResult));
     newExpr->instrs = expr1->instrs;
     AppendSeq(newExpr->instrs, expr2->instrs);
     newExpr->exprType = BoolBaseType;
     int truth = AvailTmpReg(); char * truthTxt = TmpRegName(truth);
-    int t0 = AvailTmpReg(); char * t0Txt = TmpRegName(t0);
-    int t1 = AvailTmpReg(); char * t1Txt = TmpRegName(t1);
+    newExpr->registerNum = truth;
     char * left = TmpRegName(expr1->registerNum);
     char * right = TmpRegName(expr2->registerNum);
     struct InstrSeq * seq;
     switch( condOp ) {
         case Eql:
-            seq = GenInstr(NULL, "sub", t0Txt, left, right);
-            AppendSeq(seq, GenInstr(NULL, "slt", t0Txt, t0Txt, "$zero"));
-            AppendSeq(seq, GenInstr(NULL, "sub", t1Txt, right, left));
-            AppendSeq(seq, GenInstr(NULL, "slt", t1Txt, t1Txt, "$zero"));
-            AppendSeq(seq, GenInstr(NULL, "nor",  truthTxt, t0Txt, t1Txt));
+            seq = GenInstr(NULL, "seq", truthTxt, left, right);
             break;
         case NotEql:
-            seq = GenInstr(NULL, "sub", t0Txt, left, right);
-            AppendSeq(seq, GenInstr(NULL, "sub", t1Txt, left, right));
-            AppendSeq(seq, GenInstr(NULL, "or",  truthTxt, t0Txt, t1Txt));
+            seq = GenInstr(NULL, "sne", truthTxt, left, right);
             break;
         case Less:
             seq = GenInstr(NULL, "slt", truthTxt, left, right);
             break;
         case Grtr:
-            seq = GenInstr(NULL, "sub", t0Txt, left, right);
-            AppendSeq(seq, GenInstr(NULL, "slt", truthTxt, "$zero", t0Txt));
+            seq = GenInstr(NULL, "sgt", truthTxt, left, right);
             break;
         case LessEql:
-            seq = GenInstr(NULL, "seq", t0Txt, left, right);
-            AppendSeq(seq, GenInstr(NULL, "slt", t1Txt, left, right));
-            AppendSeq(seq, GenInstr(NULL, "or", truthTxt, t0Txt, t1Txt));
+            seq = GenInstr(NULL, "sle", truthTxt, left, right);
             break;
         case GrtrEql:
-            seq = GenInstr(NULL, "seq", t0Txt, left, right);
-            AppendSeq(seq, GenInstr(NULL, "slt", t1Txt, right, left));
-            AppendSeq(seq, GenInstr(NULL, "or", truthTxt, t0Txt, t1Txt));
+            seq = GenInstr(NULL, "sge", truthTxt, left, right);
             break;
         default:
             PostMessageAndExit(GetCurrentColumn(), "Invalid Comparison Operator");
     }
-    ReleaseTmpReg(t0);
-    ReleaseTmpReg(t1);
     AppendSeq(newExpr->instrs, seq);
-    newExpr->registerNum = truth;
+    ReleaseTmpReg(expr1->registerNum);
+    ReleaseTmpReg(expr2->registerNum);
     return newExpr;
 }
 
@@ -598,6 +583,8 @@ AndOrExpr(struct ExprResult * expr1, char * op, struct ExprResult * expr2) {
     AppendSeq(newExpr->instrs, expr2->instrs);
     AppendSeq(newExpr->instrs, GenInstr(NULL, op, t0Txt,
         TmpRegName(expr1->registerNum), TmpRegName(expr1->registerNum)));
+    ReleaseTmpReg(expr1->registerNum);
+    ReleaseTmpReg(expr2->registerNum);
     return newExpr;
 }
 
@@ -614,7 +601,7 @@ NegateExpr(struct ExprResult * original) {
 
 struct CondResult *
 EvalBoolCond(struct ExprResult * boolExpr) {
-    printf("Eval bool \n");
+
     if( boolExpr->exprType != BoolBaseType ) {
         PostMessageAndExit(GetCurrentColumn(), "Not boolean expression");
     }
@@ -624,6 +611,8 @@ EvalBoolCond(struct ExprResult * boolExpr) {
     AppendSeq(condResult->instrs, GenInstr(NULL, "beq", "$zero",
         TmpRegName(boolExpr->registerNum), condResult->label));
     //ReleaseTmpReg(boolExpr->registerNum);
+    //free(condResult->label);
+    //free(condResult);
     return condResult;
 }
 
@@ -641,10 +630,9 @@ ProcIf(struct CondResult * condResult, struct InstrSeq * thenBody, struct InstrS
         AppendSeq(seq, elseBody);
         AppendSeq(seq, GenInstr(elseLabel, NULL, NULL, NULL, NULL));
     }
-    //free(condResult->label);
-    //free(condResult);
+    free(condResult->label);
+    free(condResult);
     return seq;
-    //return seq;
 }
 
 struct InstrSeq *
