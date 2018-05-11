@@ -8,53 +8,62 @@ _main:
 			li			$v0, 			4
 			la			$a0, 			L1
 			syscall
+			li			$v0, 			11
 			li			$v0, 			5
 			syscall
 			move			$t0, 			$v0
 			sw			$t0, 			_p
 L10:
-			lw			$t0, 			_p
-			li			$t1, 			1
-			ble			$t0, 			$t1, 			L2
+			lw			$t1, 			_p
+			li			$t2, 			1
+			sub			$t4, 			$t1, 			$t2
+			slt			$t3, 			$zero, 			$t4
+			beq			$zero, 			$t3, 			L2
 			li			$v0, 			4
 			la			$a0, 			L3
 			syscall
-			lw			$t0, 			_p
+			lw			$t4, 			_p
 			li			$v0, 			1
-			move			$a0, 			$t0
+			move			$a0, 			$t4
 			syscall
 			li			$v0, 			4
 			la			$a0, 			L4
 			syscall
-			li			$t0, 			2
-			sw			$t0, 			_d
+			li			$t4, 			2
+			sw			$t4, 			_d
 L8:
-			lw			$t0, 			_d
-			lw			$t1, 			_p
-			li			$t2, 			2
-			div			$t3, 			$t1, 			$t2
-			bge			$t0, 			$t3, 			L5
-			lw			$t0, 			_p
-			lw			$t1, 			_d
-			div			$t2, 			$t0, 			$t1
-			sw			$t2, 			_q
-			lw			$t0, 			_q
-			lw			$t1, 			_d
-			mul			$t2, 			$t0, 			$t1
-			lw			$t0, 			_p
-			bne			$t2, 			$t0, 			L6
-			lw			$t0, 			_d
+			lw			$t5, 			_d
+			lw			$t6, 			_p
+			li			$t7, 			2
+			div			$t8, 			$t6, 			$t7
+			slt			$t6, 			$t5, 			$t8
+			beq			$zero, 			$t6, 			L5
+			lw			$t7, 			_p
+			lw			$t9, 			_d
+			div			$s0, 			$t7, 			$t9
+			sw			$s0, 			_q
+			lw			$t7, 			_q
+			lw			$t9, 			_d
+			mul			$s1, 			$t7, 			$t9
+			lw			$t7, 			_p
+			sub			$s2, 			$s1, 			$t7
+			slt			$s2, 			$s2, 			$zero
+			sub			$s3, 			$t7, 			$s1
+			slt			$s3, 			$s3, 			$zero
+			nor			$t9, 			$s2, 			$s3
+			beq			$zero, 			$t9, 			L6
+			lw			$s2, 			_d
 			li			$v0, 			1
-			move			$a0, 			$t0
+			move			$a0, 			$s2
 			syscall
 			li			$v0, 			4
 			la			$a0, 			L7
 			syscall
 L6:
-			lw			$t0, 			_d
-			li			$t1, 			1
-			add			$t2, 			$t0, 			$t1
-			sw			$t2, 			_d
+			lw			$s2, 			_d
+			li			$s3, 			1
+			add			$s4, 			$s2, 			$s3
+			sw			$s4, 			_d
 			b			L8
 L5:
 			li			$v0, 			4
@@ -63,10 +72,11 @@ L5:
 			li			$v0, 			4
 			la			$a0, 			L1
 			syscall
+			li			$v0, 			11
 			li			$v0, 			5
 			syscall
-			move			$t0, 			$v0
-			sw			$t0, 			_p
+			move			$s2, 			$v0
+			sw			$s2, 			_p
 			b			L10
 L2:
 			jr			$ra
@@ -74,9 +84,8 @@ L2:
 _d:			.word			0
 _p:			.word			0
 _q:			.word			0
-__iobuf:			.space			4
-L9:			.asciiz			"\n"
 L7:			.asciiz			" "
-L1:			.asciiz			"> "
 L4:			.asciiz			" are "
+L1:			.asciiz			"> "
+L9:			.asciiz			"\n"
 L3:			.asciiz			"factors of "

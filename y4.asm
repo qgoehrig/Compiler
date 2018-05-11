@@ -28,33 +28,34 @@ _main:
 L5:
 			lw			$t2, 			_x
 			li			$t3, 			0
-			ble			$t2, 			$t3, 			L4
-			lw			$t4, 			_fac
+			sub			$t5, 			$t2, 			$t3
+			slt			$t4, 			$zero, 			$t5
+			beq			$zero, 			$t4, 			L4
+			lw			$t5, 			_fac
+			lw			$t6, 			_x
+			mul			$t7, 			$t5, 			$t6
+			sw			$t7, 			_fac
 			lw			$t5, 			_x
-			mul			$t6, 			$t4, 			$t5
-			sw			$t6, 			_fac
-			lw			$t7, 			_x
-			li			$t8, 			1
-			sub			$t9, 			$t7, 			$t8
-			sw			$t9, 			_x
+			li			$t6, 			1
+			sub			$t8, 			$t5, 			$t6
+			sw			$t8, 			_x
 			b			L5
 L4:
 			li			$v0, 			4
 			la			$a0, 			L6
 			syscall
-			lw			$s0, 			_fac
+			lw			$t5, 			_fac
 			li			$v0, 			1
-			move			$a0, 			$s0
+			move			$a0, 			$t5
 			syscall
 			li			$v0, 			4
-			la			$a0, 			_"\n"
+			la			$a0, 			L3
 			syscall
 			jr			$ra
 			.data
 _x:			.word			0
 _fac:			.word			0
-__iobuf:			.space			4
-_"x = ":			.asciiz			"x = "
-_"factorial = ":			.asciiz			"factorial = "
-_"> ":			.asciiz			"> "
-_"\n":			.asciiz			"\n"
+L2:			.asciiz			"x = "
+L6:			.asciiz			"factorial = "
+L1:			.asciiz			"> "
+L3:			.asciiz			"\n"

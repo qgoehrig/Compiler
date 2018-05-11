@@ -26,56 +26,56 @@ _main:
 			lw			$t2, 			_x
 			lw			$t3, 			_x
 			mul			$t4, 			$t2, 			$t3
-			lw			$t5, 			_y
-			add			$t6, 			$t4, 			$t5
-			sw			$t6, 			_r
-			li			$t7, 			120
+			lw			$t2, 			_y
+			add			$t3, 			$t4, 			$t2
+			sw			$t3, 			_r
+			li			$t2, 			120
 			li			$v0, 			11
-			move			$a0, 			$t7
+			move			$a0, 			$t2
 			syscall
-			li			$t7, 			61
+			li			$t2, 			61
 			li			$v0, 			11
-			move			$a0, 			$t7
+			move			$a0, 			$t2
 			syscall
-			lw			$t7, 			_x
+			lw			$t2, 			_x
 			li			$v0, 			1
-			move			$a0, 			$t7
+			move			$a0, 			$t2
 			syscall
-			li			$t7, 			10
+			li			$t2, 			10
 			li			$v0, 			11
-			move			$a0, 			$t7
+			move			$a0, 			$t2
 			syscall
-			li			$t7, 			121
+			li			$t2, 			121
 			li			$v0, 			11
-			move			$a0, 			$t7
+			move			$a0, 			$t2
 			syscall
-			li			$t7, 			61
+			li			$t2, 			61
 			li			$v0, 			11
-			move			$a0, 			$t7
+			move			$a0, 			$t2
 			syscall
-			lw			$t7, 			_y
+			lw			$t2, 			_y
 			li			$v0, 			1
-			move			$a0, 			$t7
+			move			$a0, 			$t2
 			syscall
-			li			$t7, 			10
+			li			$t2, 			10
 			li			$v0, 			11
-			move			$a0, 			$t7
+			move			$a0, 			$t2
 			syscall
-			li			$t7, 			114
+			li			$t2, 			114
 			li			$v0, 			11
-			move			$a0, 			$t7
+			move			$a0, 			$t2
 			syscall
-			li			$t7, 			61
+			li			$t2, 			61
 			li			$v0, 			11
-			move			$a0, 			$t7
+			move			$a0, 			$t2
 			syscall
-			lw			$t7, 			_r
+			lw			$t2, 			_r
 			li			$v0, 			1
-			move			$a0, 			$t7
+			move			$a0, 			$t2
 			syscall
-			li			$t7, 			10
+			li			$t2, 			10
 			li			$v0, 			11
-			move			$a0, 			$t7
+			move			$a0, 			$t2
 			syscall
 			jr			$ra
 			.data

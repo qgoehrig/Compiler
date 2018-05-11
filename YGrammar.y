@@ -18,6 +18,7 @@
   enum BaseTypes BaseType;
   enum Operators Operator;
   enum CondOps CondOp;
+  enum BoolOps BoolOp;
   struct InstrSeq * InstrSeq;
   struct ExprResult * ExprResult;
   struct CondResult * CondResult;
@@ -40,6 +41,7 @@
 %type <InstrSeq> FuncStmts
 %type <InstrSeq> Stmt
 %type <ExprResult> Expr
+%type <ExprResult> BoolExpr
 %type <ExprResult> Term
 %type <ExprResult> Factor
 %type <Text> ChrLit
@@ -48,6 +50,7 @@
 %type <CondOp> CondOp
 %type <CondResult> Cond
 %type <Text> StringLit
+%type <BoolOp> BoolOp
 
 /* List of token name and corresponding numbers */
 /* y.tab.h will be generated from these */
@@ -73,6 +76,9 @@
 %token STRLIT_TOK   20
 %token INCR_TOK     21
 %token DECR_TOK     22
+%token AND_TOK      23
+%token OR_TOK       24
+%token NOT_TOK      25
 
 // can't go past 32 without conflicting with single char tokens
 // could use larger token numbers
@@ -127,10 +133,17 @@ WhileStmt     : WHILE_TOK Cond FuncBody                     { $$ = ProcWhile($2,
 IncrDecrStmt  : Id INCR_TOK                                 { $$ = IncrVar($1, "1"); };
 IncrDecrStmt  : Id DECR_TOK                                 { $$ = IncrVar($1, "-1"); };
 
-Expr    :  Term                                             { $$ = $1; } ;
-Expr    :  Expr AddOp Term                               { $$ = EvalExpr($1, $2, $3); };
+Expr          : Term                                        { $$ = $1; };
+Expr          : Expr AddOp Term                             { $$ = EvalExpr($1, $2, $3); };
 
-Term    :  Term MultOp Factor                             { $$ = EvalExpr($1, $2, $3); };
+BoolExpr      : '(' BoolExpr ')'                            { $$ = $2; };
+BoolExpr      : Expr CondOp Expr                            { $$ = EvalBoolExpr($1, $2, $3); };
+BoolExpr      : NOT_TOK BoolExpr                            { $$ = NegateExpr($2); };
+BoolExpr      : BoolExpr AND_TOK BoolExpr                   { $$ = AndOrExpr($1, "and", $3); };
+BoolExpr      : BoolExpr OR_TOK BoolExpr                    { $$ = AndOrExpr($1, "or", $3); };
+
+
+Term    :  Term MultOp Factor                               { $$ = EvalExpr($1, $2, $3); };
 Term    :  Factor                                           { $$ = $1; };
 
 Factor  : '(' Expr ')'                                     { $$ = $2; } ;
@@ -143,10 +156,11 @@ StringLit : STRLIT_TOK                                     { $$ = strdup(yytext)
 
 AddOp  : '+'                                               { $$ = Add; }
 AddOp  : '-'                                               { $$ = Sub; }
-MultOp  : '*'                                               { $$ = Mul; }
-MultOp  : '/'                                               { $$ = Div; }
+MultOp  : '*'                                              { $$ = Mul; }
+MultOp  : '/'                                              { $$ = Div; }
 
-Cond      : '(' Expr CondOp Expr ')'                            { $$ = EvalCond($2, $3, $4); };
+Cond      : '(' BoolExpr ')'                                    { $$ = EvalBoolCond($2); };
+
 CondOp    : NOTEQL_TOK                                          { $$ = NotEql; };
 CondOp    : EQL_TOK                                             { $$ = Eql; };
 CondOp    : LESS_TOK                                            { $$ = Less; };

@@ -13,7 +13,7 @@ struct IdList {
   struct IdList * next;
 };
 
-enum BaseTypes { IntBaseType, ChrBaseType };
+enum BaseTypes { IntBaseType, ChrBaseType, BoolBaseType };
 
 struct FuncDesc {
   enum BaseTypes returnType;
@@ -50,8 +50,11 @@ enum CondOps { NotEql, Eql, Less, Grtr, LessEql, GrtrEql };
 
 struct CondResult {
     struct InstrSeq * instrs;
+    enum CondOps condOp;
     char * label;
 };
+
+enum BoolOps { And, Or, Not };
 
 // Supporting Routines
 
@@ -79,4 +82,8 @@ struct ExprResult *     Get(enum BaseTypes baseType);
 struct ExprResult *     GetImmInt(char * textVal);
 struct ExprResult *     GetVarExpr(char * id);
 struct ExprResult *     EvalExpr(struct ExprResult * expr1, enum Operators op, struct ExprResult * expr2);
+struct ExprResult *     EvalBoolExpr(struct ExprResult * expr1, enum CondOps condOp, struct ExprResult * expr2);
+struct ExprResult *     AndOrExpr(struct ExprResult * expr1, char * op, struct ExprResult * expr2);
+struct ExprResult *     NegateExpr(struct ExprResult * original);
 struct CondResult *     EvalCond(struct ExprResult * expr1, enum CondOps condOp, struct ExprResult * expr2);
+struct CondResult *     EvalBoolCond(struct ExprResult * boolExpr);

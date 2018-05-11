@@ -1,14 +1,16 @@
 /* Input two numbers and calculate GCD
 */
 
-decl x, y : int;
+decl a, b, c : int;
 decl main() : int;
 
+
 impl main() {
-    if ( 1 < 3 ) {
-        put('A');
-    }
-    else {
-        put('B');
-    }
+  a = 1;
+  b = 2;
+  c = 3;
+  if (a < b && b < c && a + b == c) { put("first true\n"); };
+  if (a > b || (b < c && a + b == c)) { put("second true\n"); };
+  if (a > b || b > c) { put("third true\n"); };
+  if ( !(a > b || b > c) ) { put("forth true\n"); };
 };

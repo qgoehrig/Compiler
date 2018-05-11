@@ -19,4 +19,3 @@ impl main () {
   put(fac);
   put("\n");
 };
-

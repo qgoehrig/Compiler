@@ -3,6 +3,7 @@
     Author:      Quentin Goehrig
     Created:     04/18.18
     Resources:
+    https://stackoverflow.com/questions/42958229/how-to-implement-not-operation-in-mips
 
  */
 
@@ -497,40 +498,133 @@ EvalExpr(struct ExprResult * expr1, enum Operators op, struct ExprResult * expr2
 struct CondResult *
 EvalCond(struct ExprResult * expr1, enum CondOps condOp, struct ExprResult * expr2) {
     struct CondResult * result = malloc(sizeof(struct CondResult));
+    result->condOp = condOp;
     result->instrs = expr1->instrs;
     AppendSeq(result->instrs, expr2->instrs);
     result->label = GenLabel();
     char * op;
     switch (condOp) {
-        case NotEql:
-            op = "beq";
+        case NotEql: op = "beq";
             break;
-        case Eql:
-            op = "bne";
+        case Eql: op = "bne";
             break;
-        case Less:
-            op = "bge";
+        case Less: op = "bge";
             break;
-        case Grtr:
-            op = "ble";
+        case Grtr: op = "ble";
             break;
-        case GrtrEql:
-            op = "bl";
+        case GrtrEql: op = "blt";
             break;
-        case LessEql:
-            op = "bg";
+        case LessEql: op = "bgt";
             break;
         default:
             PostMessageAndExit(GetCurrentColumn(), "Invalid Comparison Operator");
     }
     AppendSeq(result->instrs, GenInstr(NULL, op, TmpRegName(expr1->registerNum),
-                                TmpRegName(expr2->registerNum), result->label));
-    ReleaseTmpReg(expr1->registerNum);
-    ReleaseTmpReg(expr2->registerNum);
+        TmpRegName(expr2->registerNum), result->label));
     //ReleaseTmpReg(expr1->registerNum);
     //ReleaseTmpReg(expr2->registerNum);
+    //Cond      : Expr CondOp Expr    { $$ = EvalCond($1, $2, $3); }
     //free expr1, expr2...
     return result;
+}
+
+struct ExprResult *
+EvalBoolExpr(struct ExprResult * expr1, enum CondOps condOp, struct ExprResult * expr2) {
+    struct ExprResult * newExpr = malloc(sizeof(struct ExprResult));
+    newExpr->instrs = expr1->instrs;
+    AppendSeq(newExpr->instrs, expr2->instrs);
+    newExpr->exprType = BoolBaseType;
+    int truth = AvailTmpReg(); char * truthTxt = TmpRegName(truth);
+    int t0 = AvailTmpReg(); char * t0Txt = TmpRegName(t0);
+    int t1 = AvailTmpReg(); char * t1Txt = TmpRegName(t1);
+    char * left = TmpRegName(expr1->registerNum);
+    char * right = TmpRegName(expr2->registerNum);
+    struct InstrSeq * seq;
+    switch( condOp ) {
+        case Eql:
+            seq = GenInstr(NULL, "sub", t0Txt, left, right);
+            AppendSeq(seq, GenInstr(NULL, "slt", t0Txt, t0Txt, "$zero"));
+            AppendSeq(seq, GenInstr(NULL, "sub", t1Txt, right, left));
+            AppendSeq(seq, GenInstr(NULL, "slt", t1Txt, t1Txt, "$zero"));
+            AppendSeq(seq, GenInstr(NULL, "nor",  truthTxt, t0Txt, t1Txt));
+            break;
+        case NotEql:
+            seq = GenInstr(NULL, "sub", t0Txt, left, right);
+            AppendSeq(seq, GenInstr(NULL, "sub", t1Txt, left, right));
+            AppendSeq(seq, GenInstr(NULL, "or",  truthTxt, t0Txt, t1Txt));
+            break;
+        case Less:
+            seq = GenInstr(NULL, "slt", truthTxt, left, right);
+            break;
+        case Grtr:
+            seq = GenInstr(NULL, "sub", t0Txt, left, right);
+            AppendSeq(seq, GenInstr(NULL, "slt", truthTxt, "$zero", t0Txt));
+            break;
+        case LessEql:
+            seq = GenInstr(NULL, "seq", t0Txt, left, right);
+            AppendSeq(seq, GenInstr(NULL, "slt", t1Txt, left, right));
+            AppendSeq(seq, GenInstr(NULL, "or", truthTxt, t0Txt, t1Txt));
+            break;
+        case GrtrEql:
+            seq = GenInstr(NULL, "seq", t0Txt, left, right);
+            AppendSeq(seq, GenInstr(NULL, "slt", t1Txt, right, left));
+            AppendSeq(seq, GenInstr(NULL, "or", truthTxt, t0Txt, t1Txt));
+            break;
+        default:
+            PostMessageAndExit(GetCurrentColumn(), "Invalid Comparison Operator");
+    }
+    ReleaseTmpReg(t0);
+    ReleaseTmpReg(t1);
+    AppendSeq(newExpr->instrs, seq);
+    newExpr->registerNum = truth;
+    return newExpr;
+}
+
+//Cond      : '(' Expr CondOp Expr ')'                            { $$ = EvalCond($2, $3, $4); };
+
+// Return a boolean expression
+struct ExprResult *
+AndOrExpr(struct ExprResult * expr1, char * op, struct ExprResult * expr2) {
+    if(expr1->exprType != BoolBaseType && expr2->exprType != BoolBaseType) {
+        PostMessageAndExit(GetCurrentColumn(), "Expressions not boolean types");
+    }
+    char * opStr;
+    struct ExprResult * newExpr = malloc(sizeof(struct ExprResult));
+    int t0 = AvailTmpReg();
+    char * t0Txt = TmpRegName(t0);
+    newExpr->exprType = BoolBaseType;
+    newExpr->registerNum = t0;
+    newExpr->instrs = expr1->instrs;
+    AppendSeq(newExpr->instrs, expr2->instrs);
+    AppendSeq(newExpr->instrs, GenInstr(NULL, op, t0Txt,
+        TmpRegName(expr1->registerNum), TmpRegName(expr1->registerNum)));
+    return newExpr;
+}
+
+// Negate an existing boolean expression
+struct ExprResult *
+NegateExpr(struct ExprResult * original) {
+    if( original->exprType != BoolBaseType ) {
+        PostMessageAndExit(GetCurrentColumn(), "Expressions not boolean types");
+    }
+    char * regName = TmpRegName(original->registerNum);
+    AppendSeq(original->instrs, GenInstr(NULL, "nor", regName, regName, regName));
+    return original;
+}
+
+struct CondResult *
+EvalBoolCond(struct ExprResult * boolExpr) {
+    printf("Eval bool \n");
+    if( boolExpr->exprType != BoolBaseType ) {
+        PostMessageAndExit(GetCurrentColumn(), "Not boolean expression");
+    }
+    struct CondResult * condResult = malloc(sizeof(struct CondResult));
+    condResult->instrs = boolExpr->instrs;
+    condResult->label = GenLabel();
+    AppendSeq(condResult->instrs, GenInstr(NULL, "beq", "$zero",
+        TmpRegName(boolExpr->registerNum), condResult->label));
+    //ReleaseTmpReg(boolExpr->registerNum);
+    return condResult;
 }
 
 struct InstrSeq *
@@ -591,11 +685,9 @@ PutStrLit(const char * string) {
     AppendSeq(seq, GenInstr(NULL, "syscall", NULL, NULL, NULL));
     return seq;
 }
-// SEM 2
 
 struct InstrSeq *
 IncrVar(char * id, char * amount) {
-    printf("ID = %s\n", amount);
     struct SymEntry * entry = LookupName(IdentifierTable, id);
     if(entry == NULL) {
         PostMessageAndExit(GetCurrentColumn(), "Id not defined");

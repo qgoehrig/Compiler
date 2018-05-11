@@ -174,6 +174,9 @@ y5test: Y
 		./Y yfactors
 		spim -noexception -file yfactors.asm < yfactors.in
 
+qtest: Y
+		./Y qtest
+		spim -noexception -file qtest.asm
 
 
 # Other
